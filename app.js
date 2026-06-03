@@ -2,7 +2,7 @@
   const SUPABASE_URL = "https://quzputmmabgcfmegarvd.supabase.co";
   const SUPABASE_KEY = "sb_publishable_UG9E0FbUzetadkz8TQN2fg_pIWx3LTO";
   const SUPABASE_CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-  const BUILD = "BUILD: FREIGHT-STEP4-INVOICE-PREVIEW1 (JS)";
+  const BUILD = "BUILD: FREIGHT-STEP4-INVOICE-PREVIEW2-DUPEFIX (JS)";
 
   let client = null;
   let user = null;
@@ -11,6 +11,7 @@
   let currentJobData = null;
   let currentCharges = [];
 
+  const actionLocks = {};
   const $ = (id) => document.getElementById(id);
 
   function ensureOpsStatus() {
@@ -66,6 +67,23 @@
     alert("✅ " + msg);
   }
 
+  async function runLocked(lockKey, fn) {
+    if (actionLocks[lockKey]) {
+      console.warn("Blocked duplicate action:", lockKey);
+      return;
+    }
+
+    actionLocks[lockKey] = true;
+
+    try {
+      await fn();
+    } finally {
+      setTimeout(() => {
+        actionLocks[lockKey] = false;
+      }, 400);
+    }
+  }
+
   function showApp(loggedIn) {
     $("loginCard")?.classList.toggle("hidden", loggedIn);
     $("appCard")?.classList.toggle("hidden", !loggedIn);
@@ -100,12 +118,17 @@
   function resetProfitSummary() {
     if ($("sumSell")) $("sumSell").textContent = "0.00";
     if ($("sumBuy")) $("sumBuy").textContent = "0.00";
+
     if ($("sumProfit")) {
       $("sumProfit").textContent = "0.00";
       $("sumProfit").className = "metric-value profit-flat";
     }
+
     if ($("sumCount")) $("sumCount").textContent = "0";
-    if ($("profitNote")) $("profitNote").textContent = "Select a job to calculate SELL, BUY and gross profit.";
+
+    if ($("profitNote")) {
+      $("profitNote").textContent = "Select a job to calculate SELL, BUY and gross profit.";
+    }
   }
 
   function resetInvoicePreview() {
@@ -115,6 +138,7 @@
     if ($("invIncoterm")) $("invIncoterm").textContent = "-";
     if ($("invoiceLinesBody")) $("invoiceLinesBody").innerHTML = "";
     if ($("invoiceTotalBox")) $("invoiceTotalBox").textContent = "No SELL charges selected.";
+
     if ($("invoiceNote")) {
       $("invoiceNote").textContent = "Invoice preview includes SELL charges only. This does not create invoice records yet.";
     }
@@ -399,15 +423,17 @@
         <td>${job.customer_name ?? ""}</td>
       `;
 
-      tr.addEventListener("pointerdown", async (e) => {
+      tr.addEventListener("click", async (e) => {
         e.preventDefault();
 
-        currentJobId = jid;
-        setCurrentJob(job.job_no ?? "");
+        await runLocked("selectJob", async () => {
+          currentJobId = jid;
+          setCurrentJob(job.job_no ?? "");
 
-        await loadJobDetails(jid);
-        await loadCharges();
-      }, true);
+          await loadJobDetails(jid);
+          await loadCharges();
+        });
+      });
 
       tbody.appendChild(tr);
     });
@@ -554,6 +580,15 @@
     status(`Charges loaded (${currentCharges.length}).`);
   }
 
+  function clearChargeInputsAfterAdd() {
+    if ($("charge_code")) $("charge_code").value = "";
+    if ($("description")) $("description").value = "";
+    if ($("rate")) $("rate").value = "";
+    if ($("amount")) $("amount").value = "";
+    if ($("qty")) $("qty").value = "1";
+    if ($("uom")) $("uom").value = "EA";
+  }
+
   async function addCharge() {
     if (!currentJobId) return hardError("Select a job row first.");
 
@@ -600,6 +635,8 @@
 
     if (error) return hardError("Add charge failed", error);
 
+    clearChargeInputsAfterAdd();
+
     status("✅ Charge added. Refreshing charges...");
     await loadCharges();
   }
@@ -617,32 +654,38 @@
     status("✅ Logged in and data loaded.");
   }
 
-  function bindHard(id, fn) {
+  function bindHard(id, fn, lockKey) {
     const el = $(id);
     if (!el || !el.parentNode) return;
 
     const clone = el.cloneNode(true);
     el.parentNode.replaceChild(clone, el);
 
-    clone.addEventListener("pointerdown", (e) => {
+    // IMPORTANT:
+    // Use click only. Do NOT bind pointerdown + click.
+    // Binding both caused duplicate inserts.
+    clone.addEventListener("click", async (e) => {
       e.preventDefault();
-      fn();
-    }, true);
+      e.stopPropagation();
 
-    clone.addEventListener("click", (e) => {
-      e.preventDefault();
-      fn();
-    }, true);
+      clone.disabled = true;
+
+      await runLocked(lockKey || id, async () => {
+        await fn();
+      });
+
+      clone.disabled = false;
+    });
   }
 
   function wire() {
-    bindHard("btnLogin", signIn);
-    bindHard("btnLogout", signOut);
-    bindHard("btnCreateJob", createJob);
-    bindHard("btnRefreshJobs", loadJobs);
-    bindHard("btnAddCharge", addCharge);
-    bindHard("btnRefreshCharges", loadCharges);
-    bindHard("btnSaveJob", saveJobDetails);
+    bindHard("btnLogin", signIn, "login");
+    bindHard("btnLogout", signOut, "logout");
+    bindHard("btnCreateJob", createJob, "createJob");
+    bindHard("btnRefreshJobs", loadJobs, "refreshJobs");
+    bindHard("btnAddCharge", addCharge, "addCharge");
+    bindHard("btnRefreshCharges", loadCharges, "refreshCharges");
+    bindHard("btnSaveJob", saveJobDetails, "saveJob");
 
     ["qty", "rate"].forEach(id => {
       const el = $(id);
