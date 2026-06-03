@@ -2,12 +2,14 @@
   const SUPABASE_URL = "https://quzputmmabgcfmegarvd.supabase.co";
   const SUPABASE_KEY = "sb_publishable_UG9E0FbUzetadkz8TQN2fg_pIWx3LTO";
   const SUPABASE_CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-  const BUILD = "BUILD: FREIGHT-STEP3-PROFIT1 (JS)";
+  const BUILD = "BUILD: FREIGHT-STEP4-INVOICE-PREVIEW1 (JS)";
 
   let client = null;
   let user = null;
   let currentJobId = null;
   let currentJobNo = null;
+  let currentJobData = null;
+  let currentCharges = [];
 
   const $ = (id) => document.getElementById(id);
 
@@ -90,6 +92,11 @@
     });
   }
 
+  function safeText(v, fallback = "-") {
+    const s = String(v ?? "").trim();
+    return s || fallback;
+  }
+
   function resetProfitSummary() {
     if ($("sumSell")) $("sumSell").textContent = "0.00";
     if ($("sumBuy")) $("sumBuy").textContent = "0.00";
@@ -99,6 +106,18 @@
     }
     if ($("sumCount")) $("sumCount").textContent = "0";
     if ($("profitNote")) $("profitNote").textContent = "Select a job to calculate SELL, BUY and gross profit.";
+  }
+
+  function resetInvoicePreview() {
+    if ($("invJobNo")) $("invJobNo").textContent = "-";
+    if ($("invBillTo")) $("invBillTo").textContent = "-";
+    if ($("invRoute")) $("invRoute").textContent = "-";
+    if ($("invIncoterm")) $("invIncoterm").textContent = "-";
+    if ($("invoiceLinesBody")) $("invoiceLinesBody").innerHTML = "";
+    if ($("invoiceTotalBox")) $("invoiceTotalBox").textContent = "No SELL charges selected.";
+    if ($("invoiceNote")) {
+      $("invoiceNote").textContent = "Invoice preview includes SELL charges only. This does not create invoice records yet.";
+    }
   }
 
   function updateProfitSummary(charges) {
@@ -136,8 +155,63 @@
     if ($("profitNote")) {
       const currencyText = currencies.length ? currencies.join(", ") : "No currency yet";
       $("profitNote").textContent =
-        `Job ${currentJobNo || ""}: ${charges.length} charge(s). Currency seen: ${currencyText}. ` +
-        `Note: totals are simple same-currency sums for now. FX conversion comes later.`;
+        `Job ${currentJobNo || ""}: ${(charges || []).length} charge(s). Currency seen: ${currencyText}. ` +
+        `Totals are simple same-currency sums for now. FX conversion comes later.`;
+    }
+  }
+
+  function updateInvoicePreview() {
+    const job = currentJobData || {};
+    const charges = currentCharges || [];
+    const sellLines = charges.filter(c => String(c.type || "").trim().toUpperCase() === "SELL");
+
+    if ($("invJobNo")) $("invJobNo").textContent = safeText(currentJobNo);
+    if ($("invBillTo")) $("invBillTo").textContent = safeText(job.customer_name || job.consignee_name || job.shipper_name);
+    if ($("invRoute")) $("invRoute").textContent = `${safeText(job.pol)} → ${safeText(job.pod)}`;
+    if ($("invIncoterm")) $("invIncoterm").textContent = safeText(job.incoterm);
+
+    const tbody = $("invoiceLinesBody");
+    if (tbody) tbody.innerHTML = "";
+
+    const totalsByCurrency = {};
+
+    sellLines.forEach(c => {
+      const amount = Number(c.amount || 0);
+      const currency = String(c.currency || "").trim().toUpperCase() || "N/A";
+
+      totalsByCurrency[currency] = (totalsByCurrency[currency] || 0) + amount;
+
+      if (tbody) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${c.charge_code ?? ""}</td>
+          <td>${c.description ?? ""}</td>
+          <td>${c.qty ?? ""}</td>
+          <td>${c.rate ?? ""}</td>
+          <td>${money(amount)}</td>
+          <td>${currency}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    });
+
+    const totalText = Object.keys(totalsByCurrency).length
+      ? Object.entries(totalsByCurrency)
+          .map(([cur, total]) => `${cur} ${money(total)}`)
+          .join("\n")
+      : "No SELL charges selected.";
+
+    if ($("invoiceTotalBox")) $("invoiceTotalBox").textContent = totalText;
+
+    if ($("invoiceNote")) {
+      if (!currentJobId) {
+        $("invoiceNote").textContent = "Select a job first to build invoice preview.";
+      } else if (!sellLines.length) {
+        $("invoiceNote").textContent = "This job has no SELL charges yet, so invoice preview is empty.";
+      } else {
+        $("invoiceNote").textContent =
+          `Preview only: ${sellLines.length} SELL line(s) included. BUY charges are excluded from invoice preview.`;
+      }
     }
   }
 
@@ -210,9 +284,12 @@
     user = null;
     currentJobId = null;
     currentJobNo = null;
+    currentJobData = null;
+    currentCharges = [];
 
     setCurrentJob(null);
     resetProfitSummary();
+    resetInvoicePreview();
     showApp(false);
     status("Ready.");
   }
@@ -380,6 +457,8 @@
 
     if (error) return hardError("Load job details failed", error);
 
+    currentJobData = data || {};
+
     if ($("pol")) $("pol").value = data.pol || "";
     if ($("pod")) $("pod").value = data.pod || "";
     if ($("shipper_name")) $("shipper_name").value = data.shipper_name || "";
@@ -387,6 +466,8 @@
     if ($("incoterm")) $("incoterm").value = data.incoterm || "";
     if ($("origin_country")) $("origin_country").value = data.origin_country || "";
     if ($("destination_country")) $("destination_country").value = data.destination_country || "";
+
+    updateInvoicePreview();
   }
 
   async function saveJobDetails() {
@@ -413,6 +494,7 @@
 
     showOk("Job updated");
     await loadJobDetails(currentJobId);
+    updateInvoicePreview();
   }
 
   function computeAmountLive() {
@@ -431,7 +513,9 @@
 
     if (!currentJobId) {
       tbody.innerHTML = "";
+      currentCharges = [];
       resetProfitSummary();
+      resetInvoicePreview();
       return;
     }
 
@@ -445,9 +529,10 @@
 
     if (error) return hardError("Charges load failed", error);
 
+    currentCharges = data || [];
     tbody.innerHTML = "";
 
-    (data || []).forEach(c => {
+    currentCharges.forEach(c => {
       const tr = document.createElement("tr");
 
       tr.innerHTML = `
@@ -464,8 +549,9 @@
       tbody.appendChild(tr);
     });
 
-    updateProfitSummary(data || []);
-    status(`Charges loaded (${(data || []).length}).`);
+    updateProfitSummary(currentCharges);
+    updateInvoicePreview();
+    status(`Charges loaded (${currentCharges.length}).`);
   }
 
   async function addCharge() {
@@ -521,6 +607,7 @@
   async function afterLogin() {
     ensureOpsStatus();
     resetProfitSummary();
+    resetInvoicePreview();
     status("Loading data...");
 
     await loadBranches();
@@ -564,11 +651,23 @@
         el.addEventListener("change", computeAmountLive);
       }
     });
+
+    ["pol", "pod", "shipper_name", "consignee_name", "incoterm", "origin_country", "destination_country"].forEach(id => {
+      const el = $(id);
+      if (el) {
+        el.addEventListener("input", () => {
+          if (!currentJobData) currentJobData = {};
+          currentJobData[id] = el.value;
+          updateInvoicePreview();
+        });
+      }
+    });
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
     ensureOpsStatus();
     resetProfitSummary();
+    resetInvoicePreview();
 
     await initSupabase();
 
