@@ -39,7 +39,7 @@
     }
 
     .wrap{
-      width:min(1480px,100%);
+      width:min(1540px,100%);
       display:grid;
       gap:18px;
       justify-items:center;
@@ -112,7 +112,7 @@
 
     .ops-grid{
       display:grid;
-      grid-template-columns:minmax(0,1.35fr) minmax(450px,.85fr);
+      grid-template-columns:minmax(0,1.25fr) minmax(520px,.95fr);
       gap:16px;
       align-items:start;
     }
@@ -299,7 +299,18 @@
       white-space:pre-wrap;
     }
 
-    @media (max-width:1100px){
+    .warning-box{
+      margin-top:10px;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid rgba(255,209,102,.30);
+      background:rgba(255,209,102,.08);
+      color:var(--warn);
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    @media (max-width:1200px){
       .ops-grid{grid-template-columns:1fr}
       .panel{position:static}
     }
@@ -338,7 +349,7 @@
 
         <div id="status">Ready.</div>
         <div id="badge"></div>
-        <div class="build">BUILD: FREIGHT-STEP4B-INVOICE-DRAFT1 (HTML)</div>
+        <div class="build">BUILD: FREIGHT-STEP4C-INVOICE-LIST1 (HTML)</div>
       </div>
     </div>
 
@@ -347,7 +358,7 @@
         <div class="dot"></div>
         <div>
           <div class="title">Operations</div>
-          <div class="sub">Jobs • Job Details • Charges • Profitability • Invoice Draft</div>
+          <div class="sub">Jobs • Job Details • Charges • Profitability • Invoice Drafts</div>
         </div>
       </div>
 
@@ -426,7 +437,7 @@
               </table>
 
               <div class="note">
-                Click a job row to select it. This loads charges, job details, profitability and invoice draft preview.
+                Click a job row to select it. This loads charges, job details, profitability, invoice draft and saved invoices.
               </div>
             </div>
 
@@ -638,6 +649,7 @@
                   <button id="btnSaveInvoiceDraft" class="warn">Save Invoice Draft</button>
                 </div>
 
+                <div id="existingDraftWarning" class="warning-box hidden"></div>
                 <div id="savedInvoiceBox" class="saved-invoice hidden"></div>
 
                 <div class="note" id="invoiceNote">
@@ -646,7 +658,47 @@
               </div>
             </div>
 
-            <div class="build">BUILD: FREIGHT-STEP4B-INVOICE-DRAFT1 (UI)</div>
+            <div class="section">
+              <h2>Saved Invoices</h2>
+
+              <div class="btnbar">
+                <button id="btnRefreshInvoices">Refresh Saved Invoices</button>
+              </div>
+
+              <table>
+                <thead>
+                  <tr>
+                    <th>Invoice No</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody id="savedInvoicesBody"></tbody>
+              </table>
+
+              <div class="note" id="savedInvoicesNote">
+                Select a job to view saved invoices.
+              </div>
+
+              <div id="loadedInvoiceBox" class="saved-invoice hidden"></div>
+
+              <table>
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th>Qty</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                    <th>Currency</th>
+                  </tr>
+                </thead>
+                <tbody id="savedInvoiceLinesBody"></tbody>
+              </table>
+            </div>
+
+            <div class="build">BUILD: FREIGHT-STEP4C-INVOICE-LIST1 (UI)</div>
           </div>
 
         </div>
@@ -655,6 +707,7 @@
 
   </div>
 
-  <script src="./app.js?v=freight-step4b-invoice-draft1" defer></script>
+  <script src="./app.js?v=freight-step4c-invoice-list1" defer></script>
 </body>
 </html>
+``
