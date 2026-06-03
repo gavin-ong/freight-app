@@ -2,7 +2,7 @@
   const SUPABASE_URL = "https://quzputmmabgcfmegarvd.supabase.co";
   const SUPABASE_KEY = "sb_publishable_UG9E0FbUzetadkz8TQN2fg_pIWx3LTO";
   const SUPABASE_CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-  const BUILD = "BUILD: FREIGHT-STEP4G-COMPANY-PROFILE-EDITOR1 (JS)";
+  const BUILD = "BUILD: FREIGHT-STEP4H-INVOICE-LAYOUT1 (JS)";
 
   let client = null;
   let user = null;
@@ -29,7 +29,6 @@
   function ensureOpsStatus() {
     const appCard = $("appCard");
     if (!appCard) return;
-
     const body = appCard.querySelector(".body") || appCard;
 
     if (!$("opsStatus")) {
@@ -50,7 +49,6 @@
 
   function status(msg, isErr = false) {
     ensureOpsStatus();
-
     const ops = $("opsStatus");
     if (ops) {
       ops.textContent = msg;
@@ -149,27 +147,22 @@
 
   function statusPill(statusValue) {
     const s = String(statusValue || "").toUpperCase();
-
     if (s === "POSTED") return `<span class="status-pill pill-posted">POSTED</span>`;
     if (s === "VOID") return `<span class="status-pill pill-void">VOID</span>`;
     return `<span class="status-pill pill-draft">DRAFT</span>`;
   }
 
   function getSellLines() {
-    return (currentCharges || []).filter(c => {
-      return String(c.type || "").trim().toUpperCase() === "SELL";
-    });
+    return (currentCharges || []).filter(c => String(c.type || "").trim().toUpperCase() === "SELL");
   }
 
   function getTotalsByCurrency(lines) {
     const totals = {};
-
     (lines || []).forEach(c => {
       const currency = String(c.currency || "").trim().toUpperCase() || "N/A";
       const amount = Number(c.amount || 0);
       totals[currency] = (totals[currency] || 0) + amount;
     });
-
     return totals;
   }
 
@@ -222,13 +215,9 @@
         <button id="btnReloadCompanyProfile">Reload Profile</button>
       </div>
 
-      <div class="build">BUILD: FREIGHT-STEP4G-COMPANY-PROFILE-EDITOR1 (UI)</div>
+      <div class="build">BUILD: FREIGHT-STEP4H-INVOICE-LAYOUT1 (PROFILE UI)</div>
     `;
 
-    /*
-      Put it near the bottom so it does not disturb main job/charges workflow.
-      Insert before the existing final build marker if available.
-    */
     const buildMarker = panel.querySelector(".build");
     if (buildMarker) {
       panel.insertBefore(section, buildMarker);
@@ -238,7 +227,6 @@
 
     bindHard("btnSaveCompanyProfile", saveCompanyInvoiceProfile, "saveCompanyProfile");
     bindHard("btnReloadCompanyProfile", loadCompanyInvoiceProfileAndPopulate, "reloadCompanyProfile");
-
     populateCompanyProfileEditor();
   }
 
@@ -319,9 +307,6 @@
       invoice_footer: payload.invoice_footer
     };
 
-    /*
-      Rebuild preview immediately if an invoice is already selected.
-    */
     if (selectedInvoice && selectedInvoiceLines.length) {
       buildInvoiceDocumentPreview();
     }
@@ -710,13 +695,8 @@
       updated_at: new Date().toISOString()
     };
 
-    if (targetStatus === "POSTED") {
-      payload.posted_at = new Date().toISOString();
-    }
-
-    if (targetStatus === "VOID") {
-      payload.voided_at = new Date().toISOString();
-    }
+    if (targetStatus === "POSTED") payload.posted_at = new Date().toISOString();
+    if (targetStatus === "VOID") payload.voided_at = new Date().toISOString();
 
     status(`Updating invoice ${selectedInvoice.invoice_no} to ${targetStatus}...`);
 
@@ -728,7 +708,6 @@
     if (error) return hardError("Invoice status update failed", error);
 
     showOk(`Invoice ${selectedInvoice.invoice_no} marked as ${targetStatus}.`);
-
     await loadSavedInvoices();
   }
 
@@ -741,113 +720,303 @@
   }
 
   function buildInvoiceDocumentPreview() {
-    if (!selectedInvoice) {
-      return hardError("Select a saved invoice first.");
-    }
-
-    if (!selectedInvoiceLines.length) {
-      return hardError("Selected invoice has no loaded lines.");
-    }
+    if (!selectedInvoice) return hardError("Select a saved invoice first.");
+    if (!selectedInvoiceLines.length) return hardError("Selected invoice has no loaded lines.");
 
     const job = currentJobData || {};
     const inv = selectedInvoice;
     const lines = selectedInvoiceLines || [];
-
     const totals = inv.currency_summary || getTotalsByCurrency(lines);
+
     const totalText = Object.entries(totals)
       .map(([cur, total]) => `${escapeHtml(cur)} ${money(total)}`)
       .join("<br>");
 
     const lineRows = lines.map((l, idx) => `
       <tr>
-        <td>${idx + 1}</td>
-        <td>${escapeHtml(l.charge_code || "")}</td>
-        <td>${escapeHtml(l.description || "")}</td>
-        <td style="text-align:right">${escapeHtml(l.qty ?? "")}</td>
-        <td style="text-align:right">${escapeHtml(l.uom ?? "")}</td>
-        <td style="text-align:right">${money(l.rate || 0)}</td>
-        <td style="text-align:right">${money(l.amount || 0)}</td>
-        <td>${escapeHtml(l.currency || "")}</td>
+        <td class="c-num">${idx + 1}</td>
+        <td class="c-code">${escapeHtml(l.charge_code || "")}</td>
+        <td class="c-desc">${escapeHtml(l.description || "")}</td>
+        <td class="c-qty">${escapeHtml(l.qty ?? "")}</td>
+        <td class="c-uom">${escapeHtml(l.uom ?? "")}</td>
+        <td class="c-money">${money(l.rate || 0)}</td>
+        <td class="c-money">${money(l.amount || 0)}</td>
+        <td class="c-cur">${escapeHtml(l.currency || "")}</td>
       </tr>
     `).join("");
 
     const statusValue = String(inv.invoice_status || "").toUpperCase();
 
     const docHtml = `
-      <div>
-        <div style="display:flex;justify-content:space-between;gap:20px;align-items:flex-start;">
-          <div>
+      <div class="inv-doc">
+        <div class="inv-top">
+          <div class="inv-company">
             <div class="doc-company">${escapeHtml(companyProfile.company_name)}</div>
             <div class="doc-muted">
               ${htmlLines(companyProfile.company_address)}<br>
               ${escapeHtml(companyProfile.company_uen)}
             </div>
           </div>
-          <div>
+
+          <div class="inv-title-box">
             <div class="doc-title">TAX INVOICE</div>
-            <div class="doc-muted" style="text-align:right;">
-              Invoice No: <b>${escapeHtml(inv.invoice_no || "")}</b><br>
-              Status: <b>${escapeHtml(statusValue)}</b><br>
-              Date: ${escapeHtml(shortDate(inv.created_at))}
+            <div class="doc-muted inv-meta">
+              <div>Invoice No: <b>${escapeHtml(inv.invoice_no || "")}</b></div>
+              <div>Status: <b>${escapeHtml(statusValue)}</b></div>
+              <div>Date: ${escapeHtml(shortDate(inv.created_at))}</div>
             </div>
           </div>
         </div>
 
-        <div class="doc-grid">
+        <div class="doc-grid inv-info-grid">
           <div class="doc-box">
-            <b>Bill To</b><br>
-            ${escapeHtml(inv.bill_to || job.customer_name || job.consignee_name || job.shipper_name || "-")}
+            <div class="box-title">Bill To</div>
+            <div>${escapeHtml(inv.bill_to || job.customer_name || job.consignee_name || job.shipper_name || "-")}</div>
           </div>
+
           <div class="doc-box">
-            <b>Job Details</b><br>
-            Job No: ${escapeHtml(inv.job_no || currentJobNo || "-")}<br>
-            POL / POD: ${escapeHtml(job.pol || "-")} → ${escapeHtml(job.pod || "-")}<br>
-            Incoterm: ${escapeHtml(job.incoterm || "-")}<br>
-            Origin / Destination: ${escapeHtml(job.origin_country || "-")} → ${escapeHtml(job.destination_country || "-")}
+            <div class="box-title">Job Details</div>
+            <div>Job No: <b>${escapeHtml(inv.job_no || currentJobNo || "-")}</b></div>
+            <div>POL / POD: ${escapeHtml(job.pol || "-")} → ${escapeHtml(job.pod || "-")}</div>
+            <div>Incoterm: ${escapeHtml(job.incoterm || "-")}</div>
+            <div>Origin / Destination: ${escapeHtml(job.origin_country || "-")} → ${escapeHtml(job.destination_country || "-")}</div>
           </div>
         </div>
 
-        <table class="doc-table">
+        <table class="doc-table inv-lines">
           <thead>
             <tr>
-              <th>#</th>
-              <th>Code</th>
-              <th>Description</th>
-              <th>Qty</th>
-              <th>UOM</th>
-              <th>Rate</th>
-              <th>Amount</th>
-              <th>Currency</th>
+              <th class="c-num">#</th>
+              <th class="c-code">Code</th>
+              <th class="c-desc">Description</th>
+              <th class="c-qty">Qty</th>
+              <th class="c-uom">UOM</th>
+              <th class="c-money">Rate</th>
+              <th class="c-money">Amount</th>
+              <th class="c-cur">Currency</th>
             </tr>
           </thead>
-          <tbody>
-            ${lineRows}
-          </tbody>
+          <tbody>${lineRows}</tbody>
         </table>
 
-        <div class="doc-total">
-          Total Payable:<br>
-          ${totalText || "0.00"}
+        <div class="inv-total-wrap">
+          <div class="inv-total-label">Total Payable</div>
+          <div class="inv-total-value">${totalText || "0.00"}</div>
         </div>
 
-        <div class="doc-footer">
-          <b>Payment Terms</b><br>
-          ${htmlLines(companyProfile.payment_terms)}<br><br>
-          <b>Bank Details</b><br>
-          ${htmlLines(companyProfile.bank_details)}<br><br>
-          ${htmlLines(companyProfile.invoice_footer)}
+        <div class="doc-footer inv-footer">
+          <div class="footer-grid">
+            <div>
+              <b>Payment Terms</b><br>
+              ${htmlLines(companyProfile.payment_terms)}
+            </div>
+            <div>
+              <b>Bank Details</b><br>
+              ${htmlLines(companyProfile.bank_details)}
+            </div>
+          </div>
+
+          <div class="footer-note">${htmlLines(companyProfile.invoice_footer)}</div>
         </div>
       </div>
     `;
 
-    if ($("invoiceDocumentBody")) {
-      $("invoiceDocumentBody").innerHTML = docHtml;
-    }
+    if ($("invoiceDocumentBody")) $("invoiceDocumentBody").innerHTML = docHtml;
 
     const printBtn = $("btnPrintInvoiceDoc");
     if (printBtn) printBtn.disabled = false;
 
     status(`Invoice document preview built for ${inv.invoice_no}.`);
+  }
+
+  function getInvoicePrintCss() {
+    return `
+      @page { size: A4 portrait; margin: 8mm; }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #fff;
+        color: #111;
+        font-family: Arial, sans-serif;
+        font-size: 10.5px;
+        line-height: 1.32;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .print-wrap {
+        width: 194mm;
+        margin: 0 auto;
+        padding: 0;
+        background: #fff;
+        color: #111;
+      }
+
+      .inv-doc { width: 100%; }
+
+      .inv-top {
+        display: grid;
+        grid-template-columns: 1.35fr .9fr;
+        gap: 18px;
+        align-items: start;
+        margin-bottom: 14px;
+      }
+
+      .inv-company { min-width: 0; }
+
+      .doc-company {
+        font-size: 14px;
+        font-weight: 900;
+        letter-spacing: .1px;
+        margin-bottom: 2px;
+      }
+
+      .doc-muted {
+        color: #444;
+        font-size: 9.5px;
+        line-height: 1.28;
+      }
+
+      .inv-title-box {
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      .doc-title {
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: 1.2px;
+        margin-bottom: 3px;
+      }
+
+      .inv-meta div { margin-bottom: 1px; }
+
+      .doc-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 8px;
+        page-break-inside: avoid;
+      }
+
+      .doc-box {
+        border: 1px solid #cfcfcf;
+        border-radius: 5px;
+        padding: 8px;
+        min-height: 55px;
+        page-break-inside: avoid;
+      }
+
+      .box-title {
+        font-weight: 900;
+        margin-bottom: 4px;
+      }
+
+      .doc-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 9.5px;
+        table-layout: fixed;
+        page-break-inside: auto;
+      }
+
+      .doc-table th {
+        background: #f2f4f7;
+        color: #111;
+        border: 1px solid #cfcfcf;
+        padding: 5px 5px;
+        text-align: left;
+        font-weight: 900;
+      }
+
+      .doc-table td {
+        color: #111;
+        border: 1px solid #d5d5d5;
+        padding: 5px 5px;
+        vertical-align: top;
+      }
+
+      .doc-table tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+
+      .c-num { width: 5%; text-align: center; }
+      .c-code { width: 9%; }
+      .c-desc { width: 34%; }
+      .c-qty { width: 7%; text-align: right; }
+      .c-uom { width: 7%; text-align: right; }
+      .c-money { width: 12%; text-align: right; }
+      .c-cur { width: 8%; }
+
+      .inv-total-wrap {
+        margin-top: 12px;
+        margin-left: auto;
+        width: 58mm;
+        border-top: 2px solid #111;
+        padding-top: 8px;
+        text-align: right;
+        page-break-inside: avoid;
+      }
+
+      .inv-total-label {
+        font-size: 11px;
+        font-weight: 900;
+        margin-bottom: 6px;
+      }
+
+      .inv-total-value {
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1.4;
+      }
+
+      .doc-footer {
+        margin-top: 18px;
+        border-top: 1px solid #d9d9d9;
+        padding-top: 8px;
+        color: #333;
+        font-size: 9.5px;
+        page-break-inside: avoid;
+      }
+
+      .footer-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin-bottom: 10px;
+      }
+
+      .footer-note {
+        color: #555;
+        font-size: 9px;
+      }
+
+      @media print {
+        html, body {
+          width: 210mm;
+          min-height: 0;
+          height: auto;
+          overflow: visible;
+        }
+
+        .print-wrap {
+          width: 194mm;
+          margin: 0;
+        }
+      }
+    `;
+  }
+
+  function injectDocPreviewCssOnce() {
+    if (document.getElementById("invoiceDocPolishCss")) return;
+
+    const style = document.createElement("style");
+    style.id = "invoiceDocPolishCss";
+    style.textContent = getInvoicePrintCss();
+    document.head.appendChild(style);
   }
 
   function printInvoiceDocument() {
@@ -859,7 +1028,6 @@
 
     const invoiceHtml = body.innerHTML;
     const invoiceNo = selectedInvoice?.invoice_no || "invoice";
-
     const printWindow = window.open("", "_blank", "width=900,height=1100");
 
     if (!printWindow) {
@@ -872,131 +1040,10 @@
 <head>
   <meta charset="utf-8"/>
   <title>${escapeHtml(invoiceNo)}</title>
-  <style>
-    @page {
-      size: A4 portrait;
-      margin: 8mm;
-    }
-
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      background: #fff;
-      color: #111;
-      font-family: Arial, sans-serif;
-      font-size: 11px;
-      line-height: 1.35;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-
-    .print-wrap {
-      width: 194mm;
-      margin: 0 auto;
-      padding: 0;
-      background: #fff;
-      color: #111;
-    }
-
-    .doc-title {
-      font-size: 18px;
-      font-weight: 900;
-      text-align: right;
-      letter-spacing: 1px;
-    }
-
-    .doc-company {
-      font-size: 13px;
-      font-weight: 900;
-    }
-
-    .doc-muted {
-      color: #555;
-      font-size: 9.5px;
-    }
-
-    .doc-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 10px;
-      page-break-inside: avoid;
-    }
-
-    .doc-box {
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      padding: 7px;
-      min-height: 48px;
-      page-break-inside: avoid;
-    }
-
-    .doc-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      font-size: 9.5px;
-      page-break-inside: auto;
-    }
-
-    .doc-table th {
-      background: #f2f4f7;
-      color: #111;
-      border: 1px solid #ccc;
-      padding: 4px 5px;
-      text-align: left;
-    }
-
-    .doc-table td {
-      color: #111;
-      border: 1px solid #ccc;
-      padding: 4px 5px;
-    }
-
-    .doc-table tr {
-      page-break-inside: avoid;
-      page-break-after: auto;
-    }
-
-    .doc-total {
-      margin-top: 10px;
-      text-align: right;
-      font-size: 12px;
-      font-weight: 900;
-      white-space: pre-wrap;
-      page-break-inside: avoid;
-    }
-
-    .doc-footer {
-      margin-top: 12px;
-      border-top: 1px solid #ddd;
-      padding-top: 6px;
-      color: #555;
-      font-size: 9px;
-      page-break-inside: avoid;
-    }
-
-    @media print {
-      html,
-      body {
-        width: 210mm;
-        min-height: 0;
-        height: auto;
-        overflow: visible;
-      }
-
-      .print-wrap {
-        width: 194mm;
-        margin: 0;
-      }
-    }
-  </style>
+  <style>${getInvoicePrintCss()}</style>
 </head>
 <body>
-  <div class="print-wrap">
-    ${invoiceHtml}
-  </div>
+  <div class="print-wrap">${invoiceHtml}</div>
   <script>
     window.onload = function () {
       window.focus();
@@ -1004,8 +1051,7 @@
     };
   </script>
 </body>
-</html>
-`;
+</html>`;
 
     printWindow.document.open();
     printWindow.document.write(printHtml);
@@ -1026,14 +1072,10 @@
     }
 
     const sellLines = getSellLines();
-
-    if (!sellLines.length) {
-      return hardError("No SELL charges to invoice.");
-    }
+    if (!sellLines.length) return hardError("No SELL charges to invoice.");
 
     const job = currentJobData || {};
     const billTo = safeText(job.customer_name || job.consignee_name || job.shipper_name, "");
-
     const totalsByCurrency = getTotalsByCurrency(sellLines);
     const grandTotalSimple = getGrandTotalSimple(totalsByCurrency);
 
@@ -1082,16 +1124,323 @@
     if ($("savedInvoiceBox")) {
       $("savedInvoiceBox").classList.remove("hidden");
       $("savedInvoiceBox").textContent =
-        `Saved invoice draft\n` +
-        `Invoice No: ${inv.invoice_no}\n` +
-        `Lines: ${linesPayload.length}\n` +
-        `Total:\n${totalText}`;
+        `Saved invoice draft\nInvoice No: ${inv.invoice_no}\nLines: ${linesPayload.length}\nTotal:\n${totalText}`;
     }
 
     renderSavedInvoices([inv, ...(currentSavedInvoices || [])]);
     await loadSavedInvoices();
-
     showOk(`Invoice draft saved: ${inv.invoice_no}`);
+  }
+
+  async function loadBranches() {
+    const ddl = $("branch");
+    if (!ddl) return hardError("UI missing branch dropdown.");
+
+    const { data, error } = await client
+      .from("branches")
+      .select("country_code, branch_code")
+      .order("country_code", { ascending: true })
+      .order("branch_code", { ascending: true });
+
+    if (error) return hardError("Branches blocked", error);
+
+    ddl.innerHTML = "";
+
+    (data || []).forEach(b => {
+      const country = String(b.country_code || "").trim().toUpperCase();
+      const branch = String(b.branch_code || "").trim().toUpperCase();
+      const opt = document.createElement("option");
+      opt.value = branch;
+      opt.dataset.country = country;
+      opt.textContent = `${country} - ${branch}`;
+      ddl.appendChild(opt);
+    });
+  }
+
+  async function loadDefaultBranchFromProfile() {
+    if (!user) return;
+
+    const { data, error } = await client
+      .from("users")
+      .select("branch_code")
+      .eq("id", user.id)
+      .single();
+
+    if (error) {
+      console.warn("Default branch profile not loaded:", error);
+      return;
+    }
+
+    const ddl = $("branch");
+    if (!ddl || !data?.branch_code) return;
+    const saved = String(data.branch_code).toUpperCase().trim();
+    ddl.value = saved.length > 3 ? saved.slice(-3) : saved;
+  }
+
+  function getBranchContext() {
+    const ddl = $("branch");
+    const opt = ddl?.options?.[ddl.selectedIndex];
+
+    return {
+      branch_key: (ddl?.value || "").trim().toUpperCase(),
+      country_code: (opt?.dataset?.country || "SG").trim().toUpperCase()
+    };
+  }
+
+  async function loadJobs() {
+    const tbody = $("jobsTableBody");
+    if (!tbody) return hardError("UI missing jobsTableBody.");
+
+    status("Loading jobs...");
+
+    const { data, error } = await client
+      .from("jobs")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) return hardError("Jobs blocked", error);
+
+    tbody.innerHTML = "";
+
+    (data || []).forEach(job => {
+      const jid = job.job_id;
+      if (!jid) return;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(job.job_no ?? "")}</td>
+        <td>${escapeHtml(job.country_code ?? job.origin_country ?? "")}</td>
+        <td>${escapeHtml(job.branch_code ?? job.branch_key ?? "")}</td>
+        <td>${escapeHtml(job.transport_mode ?? "")}</td>
+        <td>${escapeHtml(job.job_type ?? "")}</td>
+        <td>${escapeHtml(job.customer_name ?? "")}</td>
+      `;
+
+      tr.addEventListener("click", async (e) => {
+        e.preventDefault();
+        await runLocked("selectJob", async () => {
+          currentJobId = jid;
+          setCurrentJob(job.job_no ?? "");
+
+          if ($("savedInvoiceBox")) {
+            $("savedInvoiceBox").classList.add("hidden");
+            $("savedInvoiceBox").textContent = "";
+          }
+
+          if ($("loadedInvoiceBox")) {
+            $("loadedInvoiceBox").classList.add("hidden");
+            $("loadedInvoiceBox").textContent = "";
+          }
+
+          if ($("savedInvoiceLinesBody")) {
+            $("savedInvoiceLinesBody").innerHTML = "";
+          }
+
+          selectedInvoice = null;
+          selectedInvoiceLines = [];
+          resetInvoiceDocument();
+          setWorkflowButtons();
+
+          await loadJobDetails(jid);
+          await loadCharges();
+          await loadSavedInvoices();
+        });
+      });
+
+      tbody.appendChild(tr);
+    });
+
+    status(`Jobs loaded (${(data || []).length}).`);
+  }
+
+  async function createJob() {
+    if (!user) return hardError("Not logged in.");
+
+    const ctx = getBranchContext();
+    const transportMode = ($("transport_mode")?.value || "").trim();
+    const jobType = ($("job_type")?.value || "").trim();
+    const customerName = ($("customer")?.value || "").trim();
+    const originInput = ($("country")?.value || "").trim().toUpperCase();
+    const originCountry = originInput ? originInput.slice(0, 2) : ctx.country_code;
+
+    status(`Creating job... branch=${ctx.branch_key}, origin=${originCountry}`);
+
+    const { error } = await client.rpc("create_job", {
+      p_branch_key: ctx.branch_key,
+      p_transport_mode: transportMode,
+      p_job_type: jobType,
+      p_customer_name: customerName,
+      p_origin_country: originCountry,
+      p_destination_country: "SG",
+      p_incoterm: "FOB"
+    });
+
+    if (error) return hardError("Create job failed", error);
+
+    status("✅ Job created. Refreshing jobs...");
+    await loadJobs();
+  }
+
+  async function loadJobDetails(jobId) {
+    const { data, error } = await client
+      .from("jobs")
+      .select("*")
+      .eq("job_id", jobId)
+      .single();
+
+    if (error) return hardError("Load job details failed", error);
+
+    currentJobData = data || {};
+
+    if ($("pol")) $("pol").value = data.pol || "";
+    if ($("pod")) $("pod").value = data.pod || "";
+    if ($("shipper_name")) $("shipper_name").value = data.shipper_name || "";
+    if ($("consignee_name")) $("consignee_name").value = data.consignee_name || "";
+    if ($("incoterm")) $("incoterm").value = data.incoterm || "";
+    if ($("origin_country")) $("origin_country").value = data.origin_country || "";
+    if ($("destination_country")) $("destination_country").value = data.destination_country || "";
+
+    updateInvoicePreview();
+  }
+
+  async function saveJobDetails() {
+    if (!currentJobId) return hardError("No job selected.");
+
+    const payload = {
+      pol: ($("pol")?.value || "").trim(),
+      pod: ($("pod")?.value || "").trim(),
+      shipper_name: ($("shipper_name")?.value || "").trim(),
+      consignee_name: ($("consignee_name")?.value || "").trim(),
+      incoterm: ($("incoterm")?.value || "").trim().toUpperCase(),
+      origin_country: ($("origin_country")?.value || "").trim().toUpperCase(),
+      destination_country: ($("destination_country")?.value || "").trim().toUpperCase()
+    };
+
+    status("Saving job details...");
+
+    const { error } = await client
+      .from("jobs")
+      .update(payload)
+      .eq("job_id", currentJobId);
+
+    if (error) return hardError("Update failed", error);
+
+    showOk("Job updated");
+    await loadJobDetails(currentJobId);
+    updateInvoicePreview();
+  }
+
+  function computeAmountLive() {
+    const qty = num($("qty")?.value) ?? 1;
+    const rate = num($("rate")?.value);
+
+    if (rate !== null) {
+      const amt = qty * rate;
+      if ($("amount")) $("amount").value = amt.toFixed(2);
+    }
+  }
+
+  async function loadCharges() {
+    const tbody = $("chargesTableBody");
+    if (!tbody) return;
+
+    if (!currentJobId) {
+      tbody.innerHTML = "";
+      currentCharges = [];
+      resetProfitSummary();
+      resetInvoicePreview();
+      return;
+    }
+
+    status("Loading charges...");
+
+    const { data, error } = await client
+      .from("charges")
+      .select("charge_code, description, qty, uom, rate, amount, currency, type, created_at")
+      .eq("job_id", currentJobId)
+      .order("created_at", { ascending: false });
+
+    if (error) return hardError("Charges load failed", error);
+
+    currentCharges = data || [];
+    tbody.innerHTML = "";
+
+    currentCharges.forEach(c => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(c.charge_code ?? "")}</td>
+        <td>${escapeHtml(c.description ?? "")}</td>
+        <td>${escapeHtml(c.qty ?? "")}</td>
+        <td>${escapeHtml(c.uom ?? "")}</td>
+        <td>${escapeHtml(c.rate ?? "")}</td>
+        <td>${money(c.amount || 0)}</td>
+        <td>${escapeHtml(c.currency ?? "")}</td>
+        <td>${escapeHtml(c.type ?? "")}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    updateProfitSummary(currentCharges);
+    updateInvoicePreview();
+    status(`Charges loaded (${currentCharges.length}).`);
+  }
+
+  function clearChargeInputsAfterAdd() {
+    if ($("charge_code")) $("charge_code").value = "";
+    if ($("description")) $("description").value = "";
+    if ($("rate")) $("rate").value = "";
+    if ($("amount")) $("amount").value = "";
+    if ($("qty")) $("qty").value = "1";
+    if ($("uom")) $("uom").value = "EA";
+  }
+
+  async function addCharge() {
+    if (!currentJobId) return hardError("Select a job row first.");
+
+    const charge_code = ($("charge_code")?.value || "").trim().toUpperCase();
+    const currency = ($("currency")?.value || "").trim().toUpperCase();
+    const type = ($("charge_type")?.value || "").trim().toUpperCase();
+    const description = ($("description")?.value || "").trim();
+    const qtyRaw = num($("qty")?.value);
+    const qty = qtyRaw !== null && qtyRaw > 0 ? qtyRaw : 1;
+    const rate = num($("rate")?.value);
+    const amountInput = num($("amount")?.value);
+
+    if (!charge_code || !currency || !type) {
+      return hardError("Charge fields missing. Charge Code, Currency and Type are required.");
+    }
+
+    let finalRate = rate;
+    let finalAmount = amountInput;
+
+    if (finalRate !== null) {
+      finalAmount = qty * finalRate;
+    } else {
+      if (finalAmount === null) return hardError("Amount required when Rate is blank.");
+      finalRate = finalAmount / qty;
+    }
+
+    const uom = (($("uom")?.value || "EA").trim().toUpperCase()) || "EA";
+
+    status("Adding charge...");
+
+    const { error } = await client.from("charges").insert([{
+      job_id: currentJobId,
+      charge_code,
+      description,
+      qty,
+      uom,
+      rate: finalRate,
+      amount: finalAmount,
+      currency,
+      type
+    }]);
+
+    if (error) return hardError("Add charge failed", error);
+
+    clearChargeInputsAfterAdd();
+    status("✅ Charge added. Refreshing charges...");
+    await loadCharges();
   }
 
   async function afterLogin() {
@@ -1100,6 +1449,7 @@
     resetInvoicePreview();
     resetSavedInvoices();
     ensureCompanyProfileEditor();
+    injectDocPreviewCssOnce();
     status("Loading data...");
 
     await loadCompanyInvoiceProfile();
@@ -1212,331 +1562,6 @@
     }
   }
 
-  async function loadBranches() {
-    const ddl = $("branch");
-    if (!ddl) return hardError("UI missing branch dropdown.");
-
-    const { data, error } = await client
-      .from("branches")
-      .select("country_code, branch_code")
-      .order("country_code", { ascending: true })
-      .order("branch_code", { ascending: true });
-
-    if (error) return hardError("Branches blocked", error);
-
-    ddl.innerHTML = "";
-
-    (data || []).forEach(b => {
-      const country = String(b.country_code || "").trim().toUpperCase();
-      const branch = String(b.branch_code || "").trim().toUpperCase();
-
-      const opt = document.createElement("option");
-      opt.value = branch;
-      opt.dataset.country = country;
-      opt.textContent = `${country} - ${branch}`;
-      ddl.appendChild(opt);
-    });
-  }
-
-  async function loadDefaultBranchFromProfile() {
-    if (!user) return;
-
-    const { data, error } = await client
-      .from("users")
-      .select("branch_code")
-      .eq("id", user.id)
-      .single();
-
-    if (error) {
-      console.warn("Default branch profile not loaded:", error);
-      return;
-    }
-
-    const ddl = $("branch");
-    if (!ddl || !data?.branch_code) return;
-
-    const saved = String(data.branch_code).toUpperCase().trim();
-    ddl.value = saved.length > 3 ? saved.slice(-3) : saved;
-  }
-
-  function getBranchContext() {
-    const ddl = $("branch");
-    const opt = ddl?.options?.[ddl.selectedIndex];
-
-    return {
-      branch_key: (ddl?.value || "").trim().toUpperCase(),
-      country_code: (opt?.dataset?.country || "SG").trim().toUpperCase()
-    };
-  }
-
-  async function loadJobs() {
-    const tbody = $("jobsTableBody");
-    if (!tbody) return hardError("UI missing jobsTableBody.");
-
-    status("Loading jobs...");
-
-    const { data, error } = await client
-      .from("jobs")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) return hardError("Jobs blocked", error);
-
-    tbody.innerHTML = "";
-
-    (data || []).forEach(job => {
-      const jid = job.job_id;
-      if (!jid) return;
-
-      const tr = document.createElement("tr");
-
-      tr.innerHTML = `
-        <td>${escapeHtml(job.job_no ?? "")}</td>
-        <td>${escapeHtml(job.country_code ?? job.origin_country ?? "")}</td>
-        <td>${escapeHtml(job.branch_code ?? job.branch_key ?? "")}</td>
-        <td>${escapeHtml(job.transport_mode ?? "")}</td>
-        <td>${escapeHtml(job.job_type ?? "")}</td>
-        <td>${escapeHtml(job.customer_name ?? "")}</td>
-      `;
-
-      tr.addEventListener("click", async (e) => {
-        e.preventDefault();
-
-        await runLocked("selectJob", async () => {
-          currentJobId = jid;
-          setCurrentJob(job.job_no ?? "");
-
-          if ($("savedInvoiceBox")) {
-            $("savedInvoiceBox").classList.add("hidden");
-            $("savedInvoiceBox").textContent = "";
-          }
-
-          if ($("loadedInvoiceBox")) {
-            $("loadedInvoiceBox").classList.add("hidden");
-            $("loadedInvoiceBox").textContent = "";
-          }
-
-          if ($("savedInvoiceLinesBody")) {
-            $("savedInvoiceLinesBody").innerHTML = "";
-          }
-
-          selectedInvoice = null;
-          selectedInvoiceLines = [];
-          resetInvoiceDocument();
-          setWorkflowButtons();
-
-          await loadJobDetails(jid);
-          await loadCharges();
-          await loadSavedInvoices();
-        });
-      });
-
-      tbody.appendChild(tr);
-    });
-
-    status(`Jobs loaded (${(data || []).length}).`);
-  }
-
-  async function createJob() {
-    if (!user) return hardError("Not logged in.");
-
-    const ctx = getBranchContext();
-
-    const transportMode = ($("transport_mode")?.value || "").trim();
-    const jobType = ($("job_type")?.value || "").trim();
-    const customerName = ($("customer")?.value || "").trim();
-
-    const originInput = ($("country")?.value || "").trim().toUpperCase();
-    const originCountry = originInput ? originInput.slice(0, 2) : ctx.country_code;
-
-    const destinationCountry = "SG";
-    const incoterm = "FOB";
-
-    status(`Creating job... branch=${ctx.branch_key}, origin=${originCountry}`);
-
-    const { error } = await client.rpc("create_job", {
-      p_branch_key: ctx.branch_key,
-      p_transport_mode: transportMode,
-      p_job_type: jobType,
-      p_customer_name: customerName,
-      p_origin_country: originCountry,
-      p_destination_country: destinationCountry,
-      p_incoterm: incoterm
-    });
-
-    if (error) return hardError("Create job failed", error);
-
-    status("✅ Job created. Refreshing jobs...");
-    await loadJobs();
-  }
-
-  async function loadJobDetails(jobId) {
-    const { data, error } = await client
-      .from("jobs")
-      .select("*")
-      .eq("job_id", jobId)
-      .single();
-
-    if (error) return hardError("Load job details failed", error);
-
-    currentJobData = data || {};
-
-    if ($("pol")) $("pol").value = data.pol || "";
-    if ($("pod")) $("pod").value = data.pod || "";
-    if ($("shipper_name")) $("shipper_name").value = data.shipper_name || "";
-    if ($("consignee_name")) $("consignee_name").value = data.consignee_name || "";
-    if ($("incoterm")) $("incoterm").value = data.incoterm || "";
-    if ($("origin_country")) $("origin_country").value = data.origin_country || "";
-    if ($("destination_country")) $("destination_country").value = data.destination_country || "";
-
-    updateInvoicePreview();
-  }
-
-  async function saveJobDetails() {
-    if (!currentJobId) return hardError("No job selected.");
-
-    const payload = {
-      pol: ($("pol")?.value || "").trim(),
-      pod: ($("pod")?.value || "").trim(),
-      shipper_name: ($("shipper_name")?.value || "").trim(),
-      consignee_name: ($("consignee_name")?.value || "").trim(),
-      incoterm: ($("incoterm")?.value || "").trim().toUpperCase(),
-      origin_country: ($("origin_country")?.value || "").trim().toUpperCase(),
-      destination_country: ($("destination_country")?.value || "").trim().toUpperCase()
-    };
-
-    status("Saving job details...");
-
-    const { error } = await client
-      .from("jobs")
-      .update(payload)
-      .eq("job_id", currentJobId);
-
-    if (error) return hardError("Update failed", error);
-
-    showOk("Job updated");
-    await loadJobDetails(currentJobId);
-    updateInvoicePreview();
-  }
-
-  function computeAmountLive() {
-    const qty = num($("qty")?.value) ?? 1;
-    const rate = num($("rate")?.value);
-
-    if (rate !== null) {
-      const amt = qty * rate;
-      if ($("amount")) $("amount").value = amt.toFixed(2);
-    }
-  }
-
-  async function loadCharges() {
-    const tbody = $("chargesTableBody");
-    if (!tbody) return;
-
-    if (!currentJobId) {
-      tbody.innerHTML = "";
-      currentCharges = [];
-      resetProfitSummary();
-      resetInvoicePreview();
-      return;
-    }
-
-    status("Loading charges...");
-
-    const { data, error } = await client
-      .from("charges")
-      .select("charge_code, description, qty, uom, rate, amount, currency, type, created_at")
-      .eq("job_id", currentJobId)
-      .order("created_at", { ascending: false });
-
-    if (error) return hardError("Charges load failed", error);
-
-    currentCharges = data || [];
-    tbody.innerHTML = "";
-
-    currentCharges.forEach(c => {
-      const tr = document.createElement("tr");
-
-      tr.innerHTML = `
-        <td>${escapeHtml(c.charge_code ?? "")}</td>
-        <td>${escapeHtml(c.description ?? "")}</td>
-        <td>${escapeHtml(c.qty ?? "")}</td>
-        <td>${escapeHtml(c.uom ?? "")}</td>
-        <td>${escapeHtml(c.rate ?? "")}</td>
-        <td>${money(c.amount || 0)}</td>
-        <td>${escapeHtml(c.currency ?? "")}</td>
-        <td>${escapeHtml(c.type ?? "")}</td>
-      `;
-
-      tbody.appendChild(tr);
-    });
-
-    updateProfitSummary(currentCharges);
-    updateInvoicePreview();
-    status(`Charges loaded (${currentCharges.length}).`);
-  }
-
-  function clearChargeInputsAfterAdd() {
-    if ($("charge_code")) $("charge_code").value = "";
-    if ($("description")) $("description").value = "";
-    if ($("rate")) $("rate").value = "";
-    if ($("amount")) $("amount").value = "";
-    if ($("qty")) $("qty").value = "1";
-    if ($("uom")) $("uom").value = "EA";
-  }
-
-  async function addCharge() {
-    if (!currentJobId) return hardError("Select a job row first.");
-
-    const charge_code = ($("charge_code")?.value || "").trim().toUpperCase();
-    const currency = ($("currency")?.value || "").trim().toUpperCase();
-    const type = ($("charge_type")?.value || "").trim().toUpperCase();
-    const description = ($("description")?.value || "").trim();
-
-    const qtyRaw = num($("qty")?.value);
-    const qty = qtyRaw !== null && qtyRaw > 0 ? qtyRaw : 1;
-
-    const rate = num($("rate")?.value);
-    const amountInput = num($("amount")?.value);
-
-    if (!charge_code || !currency || !type) {
-      return hardError("Charge fields missing. Charge Code, Currency and Type are required.");
-    }
-
-    let finalRate = rate;
-    let finalAmount = amountInput;
-
-    if (finalRate !== null) {
-      finalAmount = qty * finalRate;
-    } else {
-      if (finalAmount === null) return hardError("Amount required when Rate is blank.");
-      finalRate = finalAmount / qty;
-    }
-
-    const uom = (($("uom")?.value || "EA").trim().toUpperCase()) || "EA";
-
-    status("Adding charge...");
-
-    const { error } = await client.from("charges").insert([{
-      job_id: currentJobId,
-      charge_code,
-      description,
-      qty,
-      uom,
-      rate: finalRate,
-      amount: finalAmount,
-      currency,
-      type
-    }]);
-
-    if (error) return hardError("Add charge failed", error);
-
-    clearChargeInputsAfterAdd();
-
-    status("✅ Charge added. Refreshing charges...");
-    await loadCharges();
-  }
-
   function bindHard(id, fn, lockKey) {
     const el = $(id);
     if (!el || !el.parentNode) return;
@@ -1547,7 +1572,6 @@
     clone.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
-
       clone.disabled = true;
 
       await runLocked(lockKey || id, async () => {
@@ -1600,7 +1624,6 @@
     resetSavedInvoices();
 
     await initSupabase();
-
     if (!client) return;
 
     wire();
