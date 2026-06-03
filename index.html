@@ -46,12 +46,12 @@ body{
 
 .wrap{
   width:100%;
-  max-width:1450px;
+  max-width:1580px;
   margin:0 auto;
 
   display:flex;
   flex-direction:column;
-  gap:20px;
+  gap:18px;
 }
 
 .card{
@@ -65,7 +65,7 @@ body{
 }
 
 .login-width{
-  max-width:860px;
+  width:min(860px,100%);
   margin:0 auto;
 }
 
@@ -75,6 +75,7 @@ body{
   display:flex;
   gap:12px;
   align-items:center;
+  background:linear-gradient(180deg,rgba(255,255,255,.03),transparent);
 }
 
 .dot{
@@ -82,6 +83,7 @@ body{
   height:28px;
   border-radius:10px;
   background:linear-gradient(135deg,#3fbbff,#00ffc4);
+  flex:0 0 auto;
 }
 
 .title{
@@ -92,17 +94,23 @@ body{
 .sub{
   opacity:.75;
   font-size:12px;
+  margin-top:2px;
 }
 
 .body{
   padding:18px;
 }
 
+h2{
+  margin:0 0 12px;
+  font-size:14px;
+}
+
 label{
   display:block;
+  opacity:.75;
   font-size:12px;
   margin:10px 0 6px;
-  opacity:.75;
 }
 
 input,
@@ -116,10 +124,18 @@ textarea{
   color:var(--text);
   padding:10px 12px;
   outline:none;
+  font-family:inherit;
 }
 
 textarea{
   resize:vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  border-color:rgba(63,187,255,.70);
+  box-shadow:0 0 0 3px rgba(63,187,255,.12);
 }
 
 .row2{
@@ -142,31 +158,55 @@ textarea{
 
 .ops-grid{
   display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(420px,520px);
+  grid-template-columns:minmax(0,1.12fr) minmax(520px,.88fr);
   gap:20px;
   align-items:start;
   width:100%;
+  margin-top:18px;
 }
 
 .panel{
   background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.08);
-  border-radius:14px;
-  padding:14px;
-
-  width:100%;
-  max-width:100%;
+  border-radius:16px;
+  padding:18px;
 
   position:sticky;
   top:16px;
 
-  overflow:hidden;
+  overflow:visible;
 }
 
 .section{
-  margin-top:16px;
-  padding-top:14px;
+  margin-top:18px;
+  padding-top:18px;
   border-top:1px solid rgba(255,255,255,.08);
+}
+
+.summary-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:10px;
+}
+
+.metric{
+  padding:14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.05);
+}
+
+.metric-label{
+  font-size:11px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+
+.metric-value{
+  font-size:17px;
+  font-weight:900;
+  font-family:var(--mono);
 }
 
 .btnbar{
@@ -178,13 +218,17 @@ textarea{
 
 button{
   cursor:pointer;
-  min-height:36px;
+  min-height:38px;
   border-radius:10px;
   border:1px solid rgba(255,255,255,.10);
   background:rgba(255,255,255,.09);
   color:var(--text);
   padding:0 14px;
   font-weight:900;
+}
+
+button:hover{
+  filter:brightness(1.08);
 }
 
 .primary{
@@ -208,6 +252,16 @@ button{
   display:none!important;
 }
 
+.chip{
+  display:inline-block;
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(15,36,70,.8);
+  border:1px solid rgba(255,255,255,.08);
+  color:var(--muted);
+  font-size:12px;
+}
+
 table{
   width:100%;
   border-collapse:collapse;
@@ -220,20 +274,79 @@ td{
   border-bottom:1px solid rgba(255,255,255,.08);
   padding:10px 8px;
   text-align:left;
+  vertical-align:top;
+}
+
+th{
+  color:var(--muted);
+  font-weight:900;
+}
+
+tr:hover{
+  background:rgba(255,255,255,.03);
 }
 
 .note{
   opacity:.75;
   font-size:12px;
   margin-top:8px;
+  line-height:1.45;
 }
 
 .invoice-box{
   border:1px solid rgba(255,255,255,.10);
   background:rgba(255,255,255,.045);
   border-radius:14px;
-  padding:12px;
+  padding:14px;
   margin-top:10px;
+}
+
+.invoice-head{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.invoice-label{
+  color:var(--muted);
+  font-size:11px;
+  margin-bottom:4px;
+}
+
+.invoice-value{
+  font-weight:900;
+  font-family:var(--mono);
+}
+
+.invoice-total{
+  margin-top:10px;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(0,200,150,.08);
+  color:var(--ok);
+  font-weight:900;
+  white-space:pre-wrap;
+}
+
+.saved-invoice{
+  margin-top:10px;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(31,99,255,.12);
+  font-size:12px;
+  white-space:pre-wrap;
+}
+
+.warning-box{
+  margin-top:10px;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid rgba(255,209,102,.30);
+  background:rgba(255,209,102,.08);
+  color:var(--warn);
 }
 
 .doc-preview{
@@ -242,6 +355,13 @@ td{
   color:#111;
   border-radius:12px;
   padding:18px;
+}
+
+.build{
+  margin-top:10px;
+  font-size:11px;
+  opacity:.75;
+  font-family:var(--mono);
 }
 
 @media (max-width:1200px){
@@ -264,7 +384,9 @@ td{
 
   .row2,
   .row3,
-  .row4{
+  .row4,
+  .summary-grid,
+  .invoice-head{
     grid-template-columns:1fr;
   }
 
@@ -295,6 +417,8 @@ Login to manage jobs, details, charges and invoices
 
 <div class="body">
 
+<h2>Sign In</h2>
+
 <label>Email</label>
 <input id="email" type="email"/>
 
@@ -308,6 +432,10 @@ Login to manage jobs, details, charges and invoices
 
 <div id="status">Ready.</div>
 
+<div class="build">
+BUILD: FREIGHT-STEP4H-UIFIX-FINAL
+</div>
+
 </div>
 </div>
 
@@ -319,7 +447,7 @@ Login to manage jobs, details, charges and invoices
 <div>
 <div class="title">Operations</div>
 <div class="sub">
-Jobs • Charges • Profitability • Invoice Status
+Jobs • Charges • Profitability • Invoice Status • Document Preview
 </div>
 </div>
 </div>
@@ -334,9 +462,9 @@ Jobs • Charges • Profitability • Invoice Status
 </div>
 
 <div style="display:flex;align-items:flex-end">
-<span>
+<span class="chip">
 Current Job:
-<b id="currentJobNo">None</b>
+<span id="currentJobNo">None</span>
 </span>
 </div>
 
@@ -399,6 +527,7 @@ Create Job
 </div>
 
 <table>
+
 <thead>
 <tr>
 <th>Job No</th>
@@ -487,6 +616,7 @@ Add Charge
 </div>
 
 <table>
+
 <thead>
 <tr>
 <th>Code</th>
@@ -567,73 +697,32 @@ Save Job Details
 
 <h2>Profitability</h2>
 
-<div>
-SELL:
-<b id="sumSell">0.00</b>
+<div class="summary-grid">
+
+<div class="metric">
+<div class="metric-label">SELL Total</div>
+<div id="sumSell" class="metric-value">0.00</div>
 </div>
 
-<div>
-BUY:
-<b id="sumBuy">0.00</b>
+<div class="metric">
+<div class="metric-label">BUY Total</div>
+<div id="sumBuy" class="metric-value">0.00</div>
 </div>
 
-<div>
-PROFIT:
-<b id="sumProfit">0.00</b>
+<div class="metric">
+<div class="metric-label">Gross Profit</div>
+<div id="sumProfit" class="metric-value">0.00</div>
 </div>
 
-<div>
-COUNT:
-<b id="sumCount">0</b>
+<div class="metric">
+<div class="metric-label">Charge Count</div>
+<div id="sumCount" class="metric-value">0</div>
 </div>
 
 </div>
 
-<div class="section">
-
-<h2>Invoice Draft</h2>
-
-<div class="invoice-box">
-
-<div>
-Job:
-<b id="invJobNo">-</b>
-</div>
-
-<div>
-Customer:
-<b id="invBillTo">-</b>
-</div>
-
-<div>
-Route:
-<b id="invRoute">-</b>
-</div>
-
-<div>
-Incoterm:
-<b id="invIncoterm">-</b>
-</div>
-
-<table>
-
-<thead>
-<tr>
-<th>Code</th>
-<th>Description</th>
-<th>Qty</th>
-<th>Rate</th>
-<th>Amount</th>
-<th>Currency</th>
-</tr>
-</thead>
-
-<tbody id="invoiceLinesBody"></tbody>
-
-</table>
-
-<div id="invoiceTotalBox">
-No SELL charges selected.
+<div class="note" id="profitNote">
+Select a job to calculate SELL, BUY and gross profit.
 </div>
 
 </div>
@@ -644,9 +733,7 @@ No SELL charges selected.
 
 </div>
 
-</div>
-
-<script src="./app.js?v=freight-step4h-uifix2"></script>
+<script src="./app.js?v=freight-step4h-uifix-final"></script>
 
 </body>
 </html>
