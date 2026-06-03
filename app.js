@@ -2,7 +2,7 @@
   const SUPABASE_URL = "https://quzputmmabgcfmegarvd.supabase.co";
   const SUPABASE_KEY = "sb_publishable_UG9E0FbUzetadkz8TQN2fg_pIWx3LTO";
   const SUPABASE_CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-  const BUILD = "BUILD: FREIGHT-STEP4F-COMPANY-PROFILE1 (JS)";
+  const BUILD = "BUILD: FREIGHT-STEP4G-COMPANY-PROFILE-EDITOR1 (JS)";
 
   let client = null;
   let user = null;
@@ -13,6 +13,7 @@
   let currentSavedInvoices = [];
   let selectedInvoice = null;
   let selectedInvoiceLines = [];
+
   let companyProfile = {
     company_name: "YOUR COMPANY NAME PTE LTD",
     company_address: "Company address line 1, Singapore",
@@ -28,6 +29,7 @@
   function ensureOpsStatus() {
     const appCard = $("appCard");
     if (!appCard) return;
+
     const body = appCard.querySelector(".body") || appCard;
 
     if (!$("opsStatus")) {
@@ -147,6 +149,7 @@
 
   function statusPill(statusValue) {
     const s = String(statusValue || "").toUpperCase();
+
     if (s === "POSTED") return `<span class="status-pill pill-posted">POSTED</span>`;
     if (s === "VOID") return `<span class="status-pill pill-void">VOID</span>`;
     return `<span class="status-pill pill-draft">DRAFT</span>`;
@@ -172,6 +175,158 @@
 
   function getGrandTotalSimple(totalsByCurrency) {
     return Object.values(totalsByCurrency || {}).reduce((a, b) => a + Number(b || 0), 0);
+  }
+
+  function ensureCompanyProfileEditor() {
+    if ($("companyProfilePanel")) return;
+
+    const panel = document.querySelector("#appCard .panel");
+    if (!panel) return;
+
+    const section = document.createElement("div");
+    section.className = "section";
+    section.id = "companyProfilePanel";
+
+    section.innerHTML = `
+      <h2>Company Invoice Profile</h2>
+
+      <div class="note">
+        This controls the company header/footer used in the invoice document preview and print window.
+      </div>
+
+      <div class="row2">
+        <div>
+          <label>Company Name</label>
+          <input id="profile_company_name" placeholder="YOUR COMPANY NAME PTE LTD"/>
+        </div>
+        <div>
+          <label>UEN / GST Reg No</label>
+          <input id="profile_company_uen" placeholder="UEN / GST Reg No"/>
+        </div>
+      </div>
+
+      <label>Company Address</label>
+      <textarea id="profile_company_address" rows="3" style="width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.07);color:#e9f1ff;padding:10px;outline:none;font-family:inherit"></textarea>
+
+      <label>Payment Terms</label>
+      <textarea id="profile_payment_terms" rows="3" style="width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.07);color:#e9f1ff;padding:10px;outline:none;font-family:inherit"></textarea>
+
+      <label>Bank Details</label>
+      <textarea id="profile_bank_details" rows="3" style="width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.07);color:#e9f1ff;padding:10px;outline:none;font-family:inherit"></textarea>
+
+      <label>Invoice Footer</label>
+      <textarea id="profile_invoice_footer" rows="3" style="width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.07);color:#e9f1ff;padding:10px;outline:none;font-family:inherit"></textarea>
+
+      <div class="btnbar">
+        <button id="btnSaveCompanyProfile" class="primary">Save Company Profile</button>
+        <button id="btnReloadCompanyProfile">Reload Profile</button>
+      </div>
+
+      <div class="build">BUILD: FREIGHT-STEP4G-COMPANY-PROFILE-EDITOR1 (UI)</div>
+    `;
+
+    /*
+      Put it near the bottom so it does not disturb main job/charges workflow.
+      Insert before the existing final build marker if available.
+    */
+    const buildMarker = panel.querySelector(".build");
+    if (buildMarker) {
+      panel.insertBefore(section, buildMarker);
+    } else {
+      panel.appendChild(section);
+    }
+
+    bindHard("btnSaveCompanyProfile", saveCompanyInvoiceProfile, "saveCompanyProfile");
+    bindHard("btnReloadCompanyProfile", loadCompanyInvoiceProfileAndPopulate, "reloadCompanyProfile");
+
+    populateCompanyProfileEditor();
+  }
+
+  function populateCompanyProfileEditor() {
+    if ($("profile_company_name")) $("profile_company_name").value = companyProfile.company_name || "";
+    if ($("profile_company_address")) $("profile_company_address").value = companyProfile.company_address || "";
+    if ($("profile_company_uen")) $("profile_company_uen").value = companyProfile.company_uen || "";
+    if ($("profile_payment_terms")) $("profile_payment_terms").value = companyProfile.payment_terms || "";
+    if ($("profile_bank_details")) $("profile_bank_details").value = companyProfile.bank_details || "";
+    if ($("profile_invoice_footer")) $("profile_invoice_footer").value = companyProfile.invoice_footer || "";
+  }
+
+  function readCompanyProfileEditor() {
+    return {
+      profile_key: "DEFAULT",
+      company_name: ($("profile_company_name")?.value || "").trim() || "YOUR COMPANY NAME PTE LTD",
+      company_address: ($("profile_company_address")?.value || "").trim() || "Company address line 1, Singapore",
+      company_uen: ($("profile_company_uen")?.value || "").trim() || "UEN / GST Reg No: TBD",
+      payment_terms: ($("profile_payment_terms")?.value || "").trim() || "Payment due as per agreed credit terms.",
+      bank_details: ($("profile_bank_details")?.value || "").trim() || "Bank details to be configured.",
+      invoice_footer: ($("profile_invoice_footer")?.value || "").trim() || "This is a system-generated invoice from Freight App MVP.",
+      updated_at: new Date().toISOString()
+    };
+  }
+
+  async function loadCompanyInvoiceProfile() {
+    if (!client) return;
+
+    const { data, error } = await client
+      .from("company_invoice_profile")
+      .select("company_name, company_address, company_uen, payment_terms, bank_details, invoice_footer")
+      .eq("profile_key", "DEFAULT")
+      .single();
+
+    if (error) {
+      console.warn("Company invoice profile not loaded. Using defaults.", error);
+      return;
+    }
+
+    if (data) {
+      companyProfile = {
+        company_name: data.company_name || companyProfile.company_name,
+        company_address: data.company_address || companyProfile.company_address,
+        company_uen: data.company_uen || companyProfile.company_uen,
+        payment_terms: data.payment_terms || companyProfile.payment_terms,
+        bank_details: data.bank_details || companyProfile.bank_details,
+        invoice_footer: data.invoice_footer || companyProfile.invoice_footer
+      };
+    }
+  }
+
+  async function loadCompanyInvoiceProfileAndPopulate() {
+    status("Reloading company invoice profile...");
+    await loadCompanyInvoiceProfile();
+    populateCompanyProfileEditor();
+    status("✅ Company invoice profile reloaded.");
+  }
+
+  async function saveCompanyInvoiceProfile() {
+    if (!client) return hardError("Supabase not ready yet.");
+
+    const payload = readCompanyProfileEditor();
+
+    status("Saving company invoice profile...");
+
+    const { error } = await client
+      .from("company_invoice_profile")
+      .upsert([payload], { onConflict: "profile_key" });
+
+    if (error) return hardError("Company profile save failed", error);
+
+    companyProfile = {
+      company_name: payload.company_name,
+      company_address: payload.company_address,
+      company_uen: payload.company_uen,
+      payment_terms: payload.payment_terms,
+      bank_details: payload.bank_details,
+      invoice_footer: payload.invoice_footer
+    };
+
+    /*
+      Rebuild preview immediately if an invoice is already selected.
+    */
+    if (selectedInvoice && selectedInvoiceLines.length) {
+      buildInvoiceDocumentPreview();
+    }
+
+    showOk("Company invoice profile saved");
   }
 
   function resetProfitSummary() {
@@ -381,32 +536,6 @@
       box.classList.add("hidden");
       box.textContent = "";
       btn.disabled = false;
-    }
-  }
-
-  async function loadCompanyInvoiceProfile() {
-    if (!client) return;
-
-    const { data, error } = await client
-      .from("company_invoice_profile")
-      .select("company_name, company_address, company_uen, payment_terms, bank_details, invoice_footer")
-      .eq("profile_key", "DEFAULT")
-      .single();
-
-    if (error) {
-      console.warn("Company invoice profile not loaded. Using defaults.", error);
-      return;
-    }
-
-    if (data) {
-      companyProfile = {
-        company_name: data.company_name || companyProfile.company_name,
-        company_address: data.company_address || companyProfile.company_address,
-        company_uen: data.company_uen || companyProfile.company_uen,
-        payment_terms: data.payment_terms || companyProfile.payment_terms,
-        bank_details: data.bank_details || companyProfile.bank_details,
-        invoice_footer: data.invoice_footer || companyProfile.invoice_footer
-      };
     }
   }
 
@@ -965,6 +1094,23 @@
     showOk(`Invoice draft saved: ${inv.invoice_no}`);
   }
 
+  async function afterLogin() {
+    ensureOpsStatus();
+    resetProfitSummary();
+    resetInvoicePreview();
+    resetSavedInvoices();
+    ensureCompanyProfileEditor();
+    status("Loading data...");
+
+    await loadCompanyInvoiceProfile();
+    populateCompanyProfileEditor();
+    await loadBranches();
+    await loadDefaultBranchFromProfile();
+    await loadJobs();
+
+    status("✅ Logged in and data loaded.");
+  }
+
   function loadScript(src) {
     return new Promise((resolve, reject) => {
       const s = document.createElement("script");
@@ -1389,204 +1535,6 @@
 
     status("✅ Charge added. Refreshing charges...");
     await loadCharges();
-  }
-
-  async function saveInvoiceDraft() {
-    if (!currentJobId) return hardError("Select a job first.");
-
-    await loadSavedInvoices();
-
-    const existingDraft = (currentSavedInvoices || []).find(inv => {
-      return String(inv.invoice_status || "").toUpperCase() === "DRAFT";
-    });
-
-    if (existingDraft) {
-      return hardError(`Existing draft already exists for this job: ${existingDraft.invoice_no}. Load it from Saved Invoices instead.`);
-    }
-
-    const sellLines = getSellLines();
-
-    if (!sellLines.length) {
-      return hardError("No SELL charges to invoice.");
-    }
-
-    const job = currentJobData || {};
-    const billTo = safeText(job.customer_name || job.consignee_name || job.shipper_name, "");
-
-    const totalsByCurrency = getTotalsByCurrency(sellLines);
-    const grandTotalSimple = getGrandTotalSimple(totalsByCurrency);
-
-    status("Saving invoice draft...");
-
-    const { data: inv, error: invErr } = await client
-      .from("invoices")
-      .insert([{
-        job_id: currentJobId,
-        job_no: currentJobNo,
-        bill_to: billTo,
-        invoice_status: "DRAFT",
-        currency_summary: totalsByCurrency,
-        total_amount: grandTotalSimple,
-        created_by: user?.id || null
-      }])
-      .select("invoice_id, invoice_no, invoice_status, total_amount, currency_summary, created_at, job_id, job_no, posted_at, voided_at, bill_to")
-      .single();
-
-    if (invErr) return hardError("Invoice header save failed", invErr);
-    if (!inv?.invoice_id) return hardError("Invoice saved but invoice_id was not returned.");
-
-    const linesPayload = sellLines.map(c => ({
-      invoice_id: inv.invoice_id,
-      job_id: currentJobId,
-      charge_code: c.charge_code || "",
-      description: c.description || "",
-      qty: Number(c.qty || 1),
-      uom: c.uom || "",
-      rate: Number(c.rate || 0),
-      amount: Number(c.amount || 0),
-      currency: String(c.currency || "").trim().toUpperCase(),
-      source_type: "SELL"
-    }));
-
-    const { error: lineErr } = await client
-      .from("invoice_lines")
-      .insert(linesPayload);
-
-    if (lineErr) return hardError("Invoice lines save failed", lineErr);
-
-    const totalText = Object.entries(totalsByCurrency)
-      .map(([cur, total]) => `${cur} ${money(total)}`)
-      .join("\n");
-
-    if ($("savedInvoiceBox")) {
-      $("savedInvoiceBox").classList.remove("hidden");
-      $("savedInvoiceBox").textContent =
-        `Saved invoice draft\n` +
-        `Invoice No: ${inv.invoice_no}\n` +
-        `Lines: ${linesPayload.length}\n` +
-        `Total:\n${totalText}`;
-    }
-
-    renderSavedInvoices([inv, ...(currentSavedInvoices || [])]);
-    await loadSavedInvoices();
-
-    showOk(`Invoice draft saved: ${inv.invoice_no}`);
-  }
-
-  async function afterLogin() {
-    ensureOpsStatus();
-    resetProfitSummary();
-    resetInvoicePreview();
-    resetSavedInvoices();
-    status("Loading data...");
-
-    await loadCompanyInvoiceProfile();
-    await loadBranches();
-    await loadDefaultBranchFromProfile();
-    await loadJobs();
-
-    status("✅ Logged in and data loaded.");
-  }
-
-  function loadScript(src) {
-    return new Promise((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src = src;
-      s.async = true;
-      s.onload = resolve;
-      s.onerror = reject;
-      document.head.appendChild(s);
-    });
-  }
-
-  async function initSupabase() {
-    try {
-      console.log(BUILD);
-      status("Loading Supabase JS...");
-
-      if (!window.supabase || !window.supabase.createClient) {
-        await loadScript(SUPABASE_CDN);
-      }
-
-      if (!window.supabase || !window.supabase.createClient) {
-        return hardError("Supabase library failed to load.");
-      }
-
-      client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      status("Ready.");
-    } catch (e) {
-      hardError("Init crashed", e);
-    }
-  }
-
-  function creds() {
-    return {
-      email: ($("email")?.value || "").trim(),
-      password: $("password")?.value || ""
-    };
-  }
-
-  async function signIn() {
-    if (!client) return hardError("Supabase not ready yet.");
-
-    const { email, password } = creds();
-    if (!email || !password) return hardError("Email/password required.");
-
-    status("Signing in...");
-
-    const { data, error } = await client.auth.signInWithPassword({ email, password });
-    if (error) return hardError("Login failed", error);
-
-    const s = await client.auth.getSession();
-    user = s?.data?.session?.user || data?.user || null;
-
-    if (!user) return hardError("Signed in but no session created.");
-
-    showApp(true);
-    await afterLogin();
-  }
-
-  async function signOut() {
-    if (!client) return;
-
-    status("Signing out...");
-
-    const { error } = await client.auth.signOut();
-    if (error) return hardError("Logout failed", error);
-
-    user = null;
-    currentJobId = null;
-    currentJobNo = null;
-    currentJobData = null;
-    currentCharges = [];
-    currentSavedInvoices = [];
-    selectedInvoice = null;
-    selectedInvoiceLines = [];
-
-    setCurrentJob(null);
-    resetProfitSummary();
-    resetInvoicePreview();
-    resetSavedInvoices();
-    showApp(false);
-    status("Ready.");
-  }
-
-  async function restoreSession() {
-    if (!client) return;
-
-    status("Checking session...");
-
-    const { data, error } = await client.auth.getSession();
-    if (error) return hardError("Session error", error);
-
-    if (data?.session?.user) {
-      user = data.session.user;
-      showApp(true);
-      await afterLogin();
-    } else {
-      showApp(false);
-      status("Ready.");
-    }
   }
 
   function bindHard(id, fn, lockKey) {
