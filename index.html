@@ -51,7 +51,7 @@
       border-radius:var(--r);
       box-shadow:var(--shadow);
       overflow:hidden;
-      backdrop-filter: blur(10px);
+      backdrop-filter:blur(10px);
     }
 
     .login-width{
@@ -74,9 +74,20 @@
       background:linear-gradient(135deg,#3fbbff,#00ffc4);
     }
 
-    .title{font-weight:900;font-size:14px}
-    .sub{opacity:.75;font-size:12px;margin-top:2px}
-    .body{padding:18px}
+    .title{
+      font-weight:900;
+      font-size:14px;
+    }
+
+    .sub{
+      opacity:.75;
+      font-size:12px;
+      margin-top:2px;
+    }
+
+    .body{
+      padding:18px;
+    }
 
     h2{
       margin:0 0 12px;
@@ -101,7 +112,14 @@
       outline:none;
     }
 
-    input::placeholder{color:rgba(233,241,255,.45)}
+    select option{
+      color:#111;
+      background:#fff;
+    }
+
+    input::placeholder{
+      color:rgba(233,241,255,.45);
+    }
 
     .row2{
       display:grid;
@@ -133,6 +151,8 @@
       border:1px solid rgba(255,255,255,.08);
       border-radius:14px;
       padding:14px;
+      position:sticky;
+      top:16px;
     }
 
     .btnbar{
@@ -154,9 +174,21 @@
       font-weight:900;
     }
 
-    .primary{background:linear-gradient(180deg,#1f63ff,#0f3db3)}
-    .good{background:linear-gradient(180deg,#00c896,#008c6e)}
-    .hidden{display:none !important}
+    button:hover{
+      filter:brightness(1.08);
+    }
+
+    .primary{
+      background:linear-gradient(180deg,#1f63ff,#0f3db3);
+    }
+
+    .good{
+      background:linear-gradient(180deg,#00c896,#008c6e);
+    }
+
+    .hidden{
+      display:none !important;
+    }
 
     #status{
       margin-top:10px;
@@ -219,7 +251,9 @@
       cursor:pointer;
     }
 
-    .mono{font-family:var(--mono)}
+    .mono{
+      font-family:var(--mono);
+    }
 
     .note{
       opacity:.75;
@@ -235,12 +269,18 @@
       align-items:center;
     }
 
-    @media (max-width: 980px){
+    @media (max-width:980px){
       .ops-grid{
         grid-template-columns:1fr;
       }
 
-      .row2,.row3,.row4{
+      .panel{
+        position:static;
+      }
+
+      .row2,
+      .row3,
+      .row4{
         grid-template-columns:1fr;
       }
     }
@@ -276,7 +316,7 @@
 
         <div id="status">Ready.</div>
         <div id="badge"></div>
-        <div class="build">BUILD: FREIGHT-STEP2-GITHUB (HTML)</div>
+        <div class="build">BUILD: FREIGHT-STEP2-GITHUB-FIX1 (HTML)</div>
       </div>
     </div>
 
@@ -299,13 +339,16 @@
           </div>
 
           <div style="display:flex;align-items:flex-end">
-            <span class="chip">Current Job: <span id="currentJobNo" class="mono">None</span></span>
+            <span class="chip">
+              Current Job:
+              <span id="currentJobNo" class="mono">None</span>
+            </span>
           </div>
         </div>
 
         <div class="ops-grid">
 
-          <!-- LEFT SIDE: JOBS + CHARGES -->
+          <!-- LEFT SIDE -->
           <div>
 
             <!-- JOBS -->
@@ -368,7 +411,9 @@
                 <tbody id="jobsTableBody"></tbody>
               </table>
 
-              <div class="note">Tip: click a job row to select it. This loads charges and job details.</div>
+              <div class="note">
+                Tip: click a job row to select it. This loads charges and job details.
+              </div>
             </div>
 
             <!-- CHARGES -->
@@ -455,7 +500,7 @@
 
           </div>
 
-          <!-- RIGHT SIDE: JOB DETAILS PANEL -->
+          <!-- RIGHT SIDE: JOB DETAILS -->
           <div class="panel">
             <h2>Job Details</h2>
 
@@ -508,7 +553,7 @@
               Select a job from the Jobs table first. Then edit these fields and click Save Job Details.
             </div>
 
-            <div class="build">BUILD: FREIGHT-STEP2-GITHUB (UI)</div>
+            <div class="build">BUILD: FREIGHT-STEP2-GITHUB-FIX1 (UI)</div>
           </div>
 
         </div>
@@ -517,6 +562,6 @@
 
   </div>
 
-  <script src="./app.js?v=freight-step2-github" defer></script>
+  <script src="./app.js?v=freight-step2-github-fix1" defer></script>
 </body>
 </html>
