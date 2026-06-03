@@ -2,7 +2,7 @@
   const SUPABASE_URL = "https://quzputmmabgcfmegarvd.supabase.co";
   const SUPABASE_KEY = "sb_publishable_UG9E0FbUzetadkz8TQN2fg_pIWx3LTO";
   const SUPABASE_CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-  const BUILD = "BUILD: FREIGHT-STEP4E-INVOICE-DOC1 (JS)";
+  const BUILD = "BUILD: FREIGHT-STEP4E-PRINTWINDOW1 (JS)";
 
   let client = null;
   let user = null;
@@ -684,11 +684,165 @@
   }
 
   function printInvoiceDocument() {
-    if (!$("invoiceDocumentBody") || $("invoiceDocumentBody").textContent.includes("No invoice document")) {
+    const body = $("invoiceDocumentBody");
+
+    if (!body || body.textContent.includes("No invoice document")) {
       return hardError("Build invoice document preview first.");
     }
 
-    window.print();
+    const invoiceHtml = body.innerHTML;
+    const invoiceNo = selectedInvoice?.invoice_no || "invoice";
+
+    const printWindow = window.open("", "_blank", "width=900,height=1100");
+
+    if (!printWindow) {
+      return hardError("Print window was blocked by browser. Allow pop-ups for this site, then try again.");
+    }
+
+    const printHtml = `
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>${escapeHtml(invoiceNo)}</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 8mm;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: #111;
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      line-height: 1.35;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .print-wrap {
+      width: 194mm;
+      margin: 0 auto;
+      padding: 0;
+      background: #fff;
+      color: #111;
+    }
+
+    .doc-title {
+      font-size: 18px;
+      font-weight: 900;
+      text-align: right;
+      letter-spacing: 1px;
+    }
+
+    .doc-company {
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .doc-muted {
+      color: #555;
+      font-size: 9.5px;
+    }
+
+    .doc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+      page-break-inside: avoid;
+    }
+
+    .doc-box {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 7px;
+      min-height: 48px;
+      page-break-inside: avoid;
+    }
+
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 9.5px;
+      page-break-inside: auto;
+    }
+
+    .doc-table th {
+      background: #f2f4f7;
+      color: #111;
+      border: 1px solid #ccc;
+      padding: 4px 5px;
+      text-align: left;
+    }
+
+    .doc-table td {
+      color: #111;
+      border: 1px solid #ccc;
+      padding: 4px 5px;
+    }
+
+    .doc-table tr {
+      page-break-inside: avoid;
+      page-break-after: auto;
+    }
+
+    .doc-total {
+      margin-top: 10px;
+      text-align: right;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: pre-wrap;
+      page-break-inside: avoid;
+    }
+
+    .doc-footer {
+      margin-top: 12px;
+      border-top: 1px solid #ddd;
+      padding-top: 6px;
+      color: #555;
+      font-size: 9px;
+      page-break-inside: avoid;
+    }
+
+    @media print {
+      html,
+      body {
+        width: 210mm;
+        min-height: 0;
+        height: auto;
+        overflow: visible;
+      }
+
+      .print-wrap {
+        width: 194mm;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="print-wrap">
+    ${invoiceHtml}
+  </div>
+  <script>
+    window.onload = function () {
+      window.focus();
+      window.print();
+    };
+  </script>
+</body>
+</html>
+`;
+
+    printWindow.document.open();
+    printWindow.document.write(printHtml);
+    printWindow.document.close();
   }
 
   async function saveInvoiceDraft() {
