@@ -21,7 +21,9 @@
       --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
-    *{box-sizing:border-box}
+    *{
+      box-sizing:border-box;
+    }
 
     body{
       margin:0;
@@ -73,13 +75,28 @@
       height:28px;
       border-radius:10px;
       background:linear-gradient(135deg,#3fbbff,#00ffc4);
+      flex:0 0 auto;
     }
 
-    .title{font-weight:900;font-size:14px}
-    .sub{opacity:.75;font-size:12px;margin-top:2px}
-    .body{padding:18px}
+    .title{
+      font-weight:900;
+      font-size:14px;
+    }
 
-    h2{margin:0 0 12px;font-size:14px}
+    .sub{
+      opacity:.75;
+      font-size:12px;
+      margin-top:2px;
+    }
+
+    .body{
+      padding:18px;
+    }
+
+    h2{
+      margin:0 0 12px;
+      font-size:14px;
+    }
 
     label{
       display:block;
@@ -88,7 +105,8 @@
       margin:10px 0 6px;
     }
 
-    input,select{
+    input,
+    select{
       width:100%;
       height:38px;
       border-radius:10px;
@@ -99,12 +117,20 @@
       outline:none;
     }
 
+    input:focus,
+    select:focus{
+      border-color:rgba(63,187,255,.70);
+      box-shadow:0 0 0 3px rgba(63,187,255,.12);
+    }
+
     select option{
       color:#111;
       background:#fff;
     }
 
-    input::placeholder{color:rgba(233,241,255,.45)}
+    input::placeholder{
+      color:rgba(233,241,255,.45);
+    }
 
     .row2{
       display:grid;
@@ -167,9 +193,17 @@
       word-break:break-word;
     }
 
-    .profit-good{color:var(--ok)}
-    .profit-bad{color:var(--err)}
-    .profit-flat{color:var(--warn)}
+    .profit-good{
+      color:var(--ok);
+    }
+
+    .profit-bad{
+      color:var(--err);
+    }
+
+    .profit-flat{
+      color:var(--warn);
+    }
 
     .btnbar{
       display:flex;
@@ -190,10 +224,27 @@
       font-weight:900;
     }
 
-    button:hover{filter:brightness(1.08)}
-    .primary{background:linear-gradient(180deg,#1f63ff,#0f3db3)}
-    .good{background:linear-gradient(180deg,#00c896,#008c6e)}
-    .hidden{display:none !important}
+    button:hover{
+      filter:brightness(1.08);
+    }
+
+    button:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      filter:none;
+    }
+
+    .primary{
+      background:linear-gradient(180deg,#1f63ff,#0f3db3);
+    }
+
+    .good{
+      background:linear-gradient(180deg,#00c896,#008c6e);
+    }
+
+    .hidden{
+      display:none !important;
+    }
 
     #status{
       margin-top:10px;
@@ -239,7 +290,8 @@
       font-size:12px;
     }
 
-    th,td{
+    th,
+    td{
       border-bottom:1px solid rgba(255,255,255,.08);
       padding:10px 8px;
       text-align:left;
@@ -256,7 +308,9 @@
       cursor:pointer;
     }
 
-    .mono{font-family:var(--mono)}
+    .mono{
+      font-family:var(--mono);
+    }
 
     .note{
       opacity:.75;
@@ -313,12 +367,21 @@
     }
 
     @media (max-width:1100px){
-      .ops-grid{grid-template-columns:1fr}
-      .panel{position:static}
+      .ops-grid{
+        grid-template-columns:1fr;
+      }
+
+      .panel{
+        position:static;
+      }
     }
 
     @media (max-width:760px){
-      .row2,.row3,.row4,.summary-grid,.invoice-head{
+      .row2,
+      .row3,
+      .row4,
+      .summary-grid,
+      .invoice-head{
         grid-template-columns:1fr;
       }
     }
@@ -354,7 +417,7 @@
 
         <div id="status">Ready.</div>
         <div id="badge"></div>
-        <div class="build">BUILD: FREIGHT-STEP4-INVOICE-PREVIEW1 (HTML)</div>
+        <div class="build">BUILD: FREIGHT-STEP4-INVOICE-PREVIEW2-DUPEFIX (HTML)</div>
       </div>
     </div>
 
@@ -669,7 +732,7 @@
               </div>
             </div>
 
-            <div class="build">BUILD: FREIGHT-STEP4-INVOICE-PREVIEW1 (UI)</div>
+            <div class="build">BUILD: FREIGHT-STEP4-INVOICE-PREVIEW2-DUPEFIX (UI)</div>
           </div>
 
         </div>
@@ -678,6 +741,6 @@
 
   </div>
 
-  <script src="./app.js?v=freight-step4-invoice-preview1" defer></script>
+  <script src="./app.js?v=freight-step4-invoice-preview2-dupefix" defer></script>
 </body>
 </html>
