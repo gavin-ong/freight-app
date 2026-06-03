@@ -2,7 +2,7 @@
   const SUPABASE_URL = "https://quzputmmabgcfmegarvd.supabase.co";
   const SUPABASE_KEY = "sb_publishable_UG9E0FbUzetadkz8TQN2fg_pIWx3LTO";
   const SUPABASE_CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-  const BUILD = "BUILD: FREIGHT-STEP4C-INVOICE-LIST1 (JS)";
+  const BUILD = "BUILD: FREIGHT-STEP4C-INVOICE-LIST2-FIX (JS)";
 
   let client = null;
   let user = null;
@@ -315,6 +315,145 @@
       box.textContent = "";
       btn.disabled = false;
     }
+  }
+
+  function renderSavedInvoices(invoices) {
+    const tbody = $("savedInvoicesBody");
+    if (tbody) tbody.innerHTML = "";
+
+    currentSavedInvoices = invoices || [];
+
+    if (tbody) {
+      currentSavedInvoices.forEach(inv => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${inv.invoice_no ?? ""}</td>
+          <td>${inv.invoice_status ?? ""}</td>
+          <td>${money(inv.total_amount || 0)}</td>
+          <td>${shortDate(inv.created_at)}</td>
+        `;
+
+        tr.addEventListener("click", async () => {
+          await runLocked("loadInvoiceLines", async () => {
+            await loadSavedInvoiceLines(inv);
+          });
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    if ($("savedInvoicesNote")) {
+      $("savedInvoicesNote").textContent =
+        currentSavedInvoices.length
+          ? `${currentSavedInvoices.length} saved invoice(s) found for this job. Click one to load lines.`
+          : "No saved invoices found for this job.";
+    }
+
+    updateExistingDraftWarning();
+  }
+
+  async function loadSavedInvoices() {
+    if (!currentJobId && !currentJobNo) {
+      resetSavedInvoices();
+      return;
+    }
+
+    if ($("savedInvoiceLinesBody")) $("savedInvoiceLinesBody").innerHTML = "";
+    if ($("loadedInvoiceBox")) {
+      $("loadedInvoiceBox").classList.add("hidden");
+      $("loadedInvoiceBox").textContent = "";
+    }
+
+    status("Loading saved invoices...");
+
+    let data = [];
+    let error = null;
+
+    if (currentJobId) {
+      const res = await client
+        .from("invoices")
+        .select("invoice_id, invoice_no, invoice_status, total_amount, currency_summary, created_at, job_id, job_no")
+        .eq("job_id", currentJobId)
+        .order("created_at", { ascending: false });
+
+      data = res.data || [];
+      error = res.error;
+    }
+
+    if (error) return hardError("Saved invoices load failed", error);
+
+    /*
+      Fallback:
+      If job_id query returns nothing, also try job_no.
+      This protects us from earlier test invoices saved during schema-reset/debug phases
+      or any mismatch between job_id and displayed job_no.
+    */
+    if ((!data || !data.length) && currentJobNo) {
+      const res2 = await client
+        .from("invoices")
+        .select("invoice_id, invoice_no, invoice_status, total_amount, currency_summary, created_at, job_id, job_no")
+        .eq("job_no", currentJobNo)
+        .order("created_at", { ascending: false });
+
+      if (res2.error) return hardError("Saved invoices load by job_no failed", res2.error);
+      data = res2.data || [];
+    }
+
+    renderSavedInvoices(data || []);
+
+    status(`Saved invoices loaded (${(data || []).length}).`);
+  }
+
+  async function loadSavedInvoiceLines(inv) {
+    if (!inv?.invoice_id) return hardError("No invoice selected.");
+
+    status(`Loading invoice ${inv.invoice_no}...`);
+
+    const { data, error } = await client
+      .from("invoice_lines")
+      .select("charge_code, description, qty, uom, rate, amount, currency, source_type, created_at")
+      .eq("invoice_id", inv.invoice_id)
+      .order("created_at", { ascending: true });
+
+    if (error) return hardError("Saved invoice lines load failed", error);
+
+    const tbody = $("savedInvoiceLinesBody");
+    if (tbody) tbody.innerHTML = "";
+
+    (data || []).forEach(line => {
+      if (!tbody) return;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${line.charge_code ?? ""}</td>
+        <td>${line.description ?? ""}</td>
+        <td>${line.qty ?? ""}</td>
+        <td>${line.rate ?? ""}</td>
+        <td>${money(line.amount || 0)}</td>
+        <td>${line.currency ?? ""}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const totalText = inv.currency_summary
+      ? Object.entries(inv.currency_summary)
+          .map(([cur, total]) => `${cur} ${money(total)}`)
+          .join("\n")
+      : money(inv.total_amount || 0);
+
+    if ($("loadedInvoiceBox")) {
+      $("loadedInvoiceBox").classList.remove("hidden");
+      $("loadedInvoiceBox").textContent =
+        `Loaded saved invoice\n` +
+        `Invoice No: ${inv.invoice_no}\n` +
+        `Status: ${inv.invoice_status}\n` +
+        `Lines: ${(data || []).length}\n` +
+        `Total:\n${totalText}`;
+    }
+
+    status(`Invoice ${inv.invoice_no} loaded.`);
   }
 
   function loadScript(src) {
@@ -739,6 +878,12 @@
   async function saveInvoiceDraft() {
     if (!currentJobId) return hardError("Select a job first.");
 
+    /*
+      Always reload before duplicate check.
+      This prevents stale UI state from missing an existing draft.
+    */
+    await loadSavedInvoices();
+
     const existingDraft = (currentSavedInvoices || []).find(inv => {
       return String(inv.invoice_status || "").toUpperCase() === "DRAFT";
     });
@@ -772,7 +917,7 @@
         total_amount: grandTotalSimple,
         created_by: user?.id || null
       }])
-      .select("invoice_id, invoice_no")
+      .select("invoice_id, invoice_no, invoice_status, total_amount, currency_summary, created_at, job_id, job_no")
       .single();
 
     if (invErr) return hardError("Invoice header save failed", invErr);
@@ -810,119 +955,14 @@
         `Total:\n${totalText}`;
     }
 
+    /*
+      Immediate local render so user sees the invoice even if network/cache delay happens.
+      Then reload from database to confirm.
+    */
+    renderSavedInvoices([inv, ...(currentSavedInvoices || [])]);
     await loadSavedInvoices();
 
     showOk(`Invoice draft saved: ${inv.invoice_no}`);
-  }
-
-  async function loadSavedInvoices() {
-    const tbody = $("savedInvoicesBody");
-
-    if (!currentJobId) {
-      resetSavedInvoices();
-      return;
-    }
-
-    if (tbody) tbody.innerHTML = "";
-    if ($("savedInvoiceLinesBody")) $("savedInvoiceLinesBody").innerHTML = "";
-    if ($("loadedInvoiceBox")) {
-      $("loadedInvoiceBox").classList.add("hidden");
-      $("loadedInvoiceBox").textContent = "";
-    }
-
-    status("Loading saved invoices...");
-
-    const { data, error } = await client
-      .from("invoices")
-      .select("invoice_id, invoice_no, invoice_status, total_amount, currency_summary, created_at")
-      .eq("job_id", currentJobId)
-      .order("created_at", { ascending: false });
-
-    if (error) return hardError("Saved invoices load failed", error);
-
-    currentSavedInvoices = data || [];
-
-    if (tbody) {
-      currentSavedInvoices.forEach(inv => {
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = `
-          <td>${inv.invoice_no ?? ""}</td>
-          <td>${inv.invoice_status ?? ""}</td>
-          <td>${money(inv.total_amount || 0)}</td>
-          <td>${shortDate(inv.created_at)}</td>
-        `;
-
-        tr.addEventListener("click", async () => {
-          await runLocked("loadInvoiceLines", async () => {
-            await loadSavedInvoiceLines(inv);
-          });
-        });
-
-        tbody.appendChild(tr);
-      });
-    }
-
-    if ($("savedInvoicesNote")) {
-      $("savedInvoicesNote").textContent =
-        currentSavedInvoices.length
-          ? `${currentSavedInvoices.length} saved invoice(s) found for this job. Click one to load lines.`
-          : "No saved invoices found for this job.";
-    }
-
-    updateExistingDraftWarning();
-
-    status(`Saved invoices loaded (${currentSavedInvoices.length}).`);
-  }
-
-  async function loadSavedInvoiceLines(inv) {
-    if (!inv?.invoice_id) return hardError("No invoice selected.");
-
-    status(`Loading invoice ${inv.invoice_no}...`);
-
-    const { data, error } = await client
-      .from("invoice_lines")
-      .select("charge_code, description, qty, uom, rate, amount, currency, source_type, created_at")
-      .eq("invoice_id", inv.invoice_id)
-      .order("created_at", { ascending: true });
-
-    if (error) return hardError("Saved invoice lines load failed", error);
-
-    const tbody = $("savedInvoiceLinesBody");
-    if (tbody) tbody.innerHTML = "";
-
-    (data || []).forEach(line => {
-      if (!tbody) return;
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${line.charge_code ?? ""}</td>
-        <td>${line.description ?? ""}</td>
-        <td>${line.qty ?? ""}</td>
-        <td>${line.rate ?? ""}</td>
-        <td>${money(line.amount || 0)}</td>
-        <td>${line.currency ?? ""}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    const totalText = inv.currency_summary
-      ? Object.entries(inv.currency_summary)
-          .map(([cur, total]) => `${cur} ${money(total)}`)
-          .join("\n")
-      : money(inv.total_amount || 0);
-
-    if ($("loadedInvoiceBox")) {
-      $("loadedInvoiceBox").classList.remove("hidden");
-      $("loadedInvoiceBox").textContent =
-        `Loaded saved invoice\n` +
-        `Invoice No: ${inv.invoice_no}\n` +
-        `Status: ${inv.invoice_status}\n` +
-        `Lines: ${(data || []).length}\n` +
-        `Total:\n${totalText}`;
-    }
-
-    status(`Invoice ${inv.invoice_no} loaded.`);
   }
 
   async function afterLogin() {
