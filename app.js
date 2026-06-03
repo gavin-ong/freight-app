@@ -2,7 +2,7 @@
   const SUPABASE_URL = "https://quzputmmabgcfmegarvd.supabase.co";
   const SUPABASE_KEY = "sb_publishable_UG9E0FbUzetadkz8TQN2fg_pIWx3LTO";
   const SUPABASE_CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-  const BUILD = "BUILD: FREIGHT-STEP4-INVOICE-PREVIEW2-DUPEFIX (JS)";
+  const BUILD = "BUILD: FREIGHT-STEP4B-INVOICE-DRAFT1 (JS)";
 
   let client = null;
   let user = null;
@@ -80,7 +80,7 @@
     } finally {
       setTimeout(() => {
         actionLocks[lockKey] = false;
-      }, 400);
+      }, 500);
     }
   }
 
@@ -115,6 +115,28 @@
     return s || fallback;
   }
 
+  function getSellLines() {
+    return (currentCharges || []).filter(c => {
+      return String(c.type || "").trim().toUpperCase() === "SELL";
+    });
+  }
+
+  function getTotalsByCurrency(lines) {
+    const totals = {};
+
+    (lines || []).forEach(c => {
+      const currency = String(c.currency || "").trim().toUpperCase() || "N/A";
+      const amount = Number(c.amount || 0);
+      totals[currency] = (totals[currency] || 0) + amount;
+    });
+
+    return totals;
+  }
+
+  function getGrandTotalSimple(totalsByCurrency) {
+    return Object.values(totalsByCurrency || {}).reduce((a, b) => a + Number(b || 0), 0);
+  }
+
   function resetProfitSummary() {
     if ($("sumSell")) $("sumSell").textContent = "0.00";
     if ($("sumBuy")) $("sumBuy").textContent = "0.00";
@@ -139,8 +161,13 @@
     if ($("invoiceLinesBody")) $("invoiceLinesBody").innerHTML = "";
     if ($("invoiceTotalBox")) $("invoiceTotalBox").textContent = "No SELL charges selected.";
 
+    if ($("savedInvoiceBox")) {
+      $("savedInvoiceBox").classList.add("hidden");
+      $("savedInvoiceBox").textContent = "";
+    }
+
     if ($("invoiceNote")) {
-      $("invoiceNote").textContent = "Invoice preview includes SELL charges only. This does not create invoice records yet.";
+      $("invoiceNote").textContent = "Invoice draft includes SELL charges only. Saving creates invoice header and invoice lines.";
     }
   }
 
@@ -155,7 +182,6 @@
       const cur = String(c.currency || "").trim().toUpperCase();
 
       if (cur) currencySet.add(cur);
-
       if (typ === "SELL") sell += amt;
       if (typ === "BUY") buy += amt;
     });
@@ -186,8 +212,7 @@
 
   function updateInvoicePreview() {
     const job = currentJobData || {};
-    const charges = currentCharges || [];
-    const sellLines = charges.filter(c => String(c.type || "").trim().toUpperCase() === "SELL");
+    const sellLines = getSellLines();
 
     if ($("invJobNo")) $("invJobNo").textContent = safeText(currentJobNo);
     if ($("invBillTo")) $("invBillTo").textContent = safeText(job.customer_name || job.consignee_name || job.shipper_name);
@@ -197,44 +222,40 @@
     const tbody = $("invoiceLinesBody");
     if (tbody) tbody.innerHTML = "";
 
-    const totalsByCurrency = {};
-
     sellLines.forEach(c => {
+      if (!tbody) return;
+
       const amount = Number(c.amount || 0);
       const currency = String(c.currency || "").trim().toUpperCase() || "N/A";
 
-      totalsByCurrency[currency] = (totalsByCurrency[currency] || 0) + amount;
-
-      if (tbody) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${c.charge_code ?? ""}</td>
-          <td>${c.description ?? ""}</td>
-          <td>${c.qty ?? ""}</td>
-          <td>${c.rate ?? ""}</td>
-          <td>${money(amount)}</td>
-          <td>${currency}</td>
-        `;
-        tbody.appendChild(tr);
-      }
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${c.charge_code ?? ""}</td>
+        <td>${c.description ?? ""}</td>
+        <td>${c.qty ?? ""}</td>
+        <td>${c.rate ?? ""}</td>
+        <td>${money(amount)}</td>
+        <td>${currency}</td>
+      `;
+      tbody.appendChild(tr);
     });
 
+    const totalsByCurrency = getTotalsByCurrency(sellLines);
+
     const totalText = Object.keys(totalsByCurrency).length
-      ? Object.entries(totalsByCurrency)
-          .map(([cur, total]) => `${cur} ${money(total)}`)
-          .join("\n")
+      ? Object.entries(totalsByCurrency).map(([cur, total]) => `${cur} ${money(total)}`).join("\n")
       : "No SELL charges selected.";
 
     if ($("invoiceTotalBox")) $("invoiceTotalBox").textContent = totalText;
 
     if ($("invoiceNote")) {
       if (!currentJobId) {
-        $("invoiceNote").textContent = "Select a job first to build invoice preview.";
+        $("invoiceNote").textContent = "Select a job first to build invoice draft.";
       } else if (!sellLines.length) {
-        $("invoiceNote").textContent = "This job has no SELL charges yet, so invoice preview is empty.";
+        $("invoiceNote").textContent = "This job has no SELL charges yet, so invoice draft is empty.";
       } else {
         $("invoiceNote").textContent =
-          `Preview only: ${sellLines.length} SELL line(s) included. BUY charges are excluded from invoice preview.`;
+          `Draft ready: ${sellLines.length} SELL line(s). BUY charges are excluded from invoice draft.`;
       }
     }
   }
@@ -429,6 +450,11 @@
         await runLocked("selectJob", async () => {
           currentJobId = jid;
           setCurrentJob(job.job_no ?? "");
+
+          if ($("savedInvoiceBox")) {
+            $("savedInvoiceBox").classList.add("hidden");
+            $("savedInvoiceBox").textContent = "";
+          }
 
           await loadJobDetails(jid);
           await loadCharges();
@@ -641,6 +667,75 @@
     await loadCharges();
   }
 
+  async function saveInvoiceDraft() {
+    if (!currentJobId) return hardError("Select a job first.");
+
+    const sellLines = getSellLines();
+
+    if (!sellLines.length) {
+      return hardError("No SELL charges to invoice.");
+    }
+
+    const job = currentJobData || {};
+    const billTo = safeText(job.customer_name || job.consignee_name || job.shipper_name, "");
+
+    const totalsByCurrency = getTotalsByCurrency(sellLines);
+    const grandTotalSimple = getGrandTotalSimple(totalsByCurrency);
+
+    status("Saving invoice draft...");
+
+    const { data: inv, error: invErr } = await client
+      .from("invoices")
+      .insert([{
+        job_id: currentJobId,
+        job_no: currentJobNo,
+        bill_to: billTo,
+        invoice_status: "DRAFT",
+        currency_summary: totalsByCurrency,
+        total_amount: grandTotalSimple,
+        created_by: user?.id || null
+      }])
+      .select("invoice_id, invoice_no")
+      .single();
+
+    if (invErr) return hardError("Invoice header save failed", invErr);
+    if (!inv?.invoice_id) return hardError("Invoice saved but invoice_id was not returned.");
+
+    const linesPayload = sellLines.map(c => ({
+      invoice_id: inv.invoice_id,
+      job_id: currentJobId,
+      charge_code: c.charge_code || "",
+      description: c.description || "",
+      qty: Number(c.qty || 1),
+      uom: c.uom || "",
+      rate: Number(c.rate || 0),
+      amount: Number(c.amount || 0),
+      currency: String(c.currency || "").trim().toUpperCase(),
+      source_type: "SELL"
+    }));
+
+    const { error: lineErr } = await client
+      .from("invoice_lines")
+      .insert(linesPayload);
+
+    if (lineErr) return hardError("Invoice lines save failed", lineErr);
+
+    const totalText = Object.entries(totalsByCurrency)
+      .map(([cur, total]) => `${cur} ${money(total)}`)
+      .join("\n");
+
+    if ($("savedInvoiceBox")) {
+      $("savedInvoiceBox").classList.remove("hidden");
+      $("savedInvoiceBox").textContent =
+        `Saved invoice draft\n` +
+        `Invoice No: ${inv.invoice_no}\n` +
+        `Lines: ${linesPayload.length}\n` +
+        `Total:\n${totalText}`;
+    }
+
+    showOk(`Invoice draft saved: ${inv.invoice_no}`);
+  }
+
   async function afterLogin() {
     ensureOpsStatus();
     resetProfitSummary();
@@ -661,9 +756,6 @@
     const clone = el.cloneNode(true);
     el.parentNode.replaceChild(clone, el);
 
-    // IMPORTANT:
-    // Use click only. Do NOT bind pointerdown + click.
-    // Binding both caused duplicate inserts.
     clone.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -686,6 +778,7 @@
     bindHard("btnAddCharge", addCharge, "addCharge");
     bindHard("btnRefreshCharges", loadCharges, "refreshCharges");
     bindHard("btnSaveJob", saveJobDetails, "saveJob");
+    bindHard("btnSaveInvoiceDraft", saveInvoiceDraft, "saveInvoiceDraft");
 
     ["qty", "rate"].forEach(id => {
       const el = $(id);
