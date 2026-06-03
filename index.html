@@ -21,12 +21,9 @@
       --sans:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
 
-    *{
-      box-sizing:border-box;
-    }
+    *{box-sizing:border-box}
 
-    html,
-    body{
+    html,body{
       margin:0;
       min-height:100vh;
     }
@@ -197,17 +194,9 @@
       word-break:break-word;
     }
 
-    .profit-good{
-      color:var(--ok);
-    }
-
-    .profit-bad{
-      color:var(--err);
-    }
-
-    .profit-flat{
-      color:var(--warn);
-    }
+    .profit-good{color:var(--ok)}
+    .profit-bad{color:var(--err)}
+    .profit-flat{color:var(--warn)}
 
     .btnbar{
       display:flex;
@@ -228,36 +217,14 @@
       font-weight:900;
     }
 
-    button:hover{
-      filter:brightness(1.08);
-    }
+    button:hover{filter:brightness(1.08)}
+    button:disabled{opacity:.55;cursor:not-allowed;filter:none}
 
-    button:disabled{
-      opacity:.55;
-      cursor:not-allowed;
-      filter:none;
-    }
-
-    .primary{
-      background:linear-gradient(180deg,#1f63ff,#0f3db3);
-    }
-
-    .good{
-      background:linear-gradient(180deg,#00c896,#008c6e);
-    }
-
-    .warn{
-      background:linear-gradient(180deg,#f7b731,#b87900);
-      color:#071224;
-    }
-
-    .danger{
-      background:linear-gradient(180deg,#ff5f6d,#b30021);
-    }
-
-    .hidden{
-      display:none!important;
-    }
+    .primary{background:linear-gradient(180deg,#1f63ff,#0f3db3)}
+    .good{background:linear-gradient(180deg,#00c896,#008c6e)}
+    .warn{background:linear-gradient(180deg,#f7b731,#b87900);color:#071224}
+    .danger{background:linear-gradient(180deg,#ff5f6d,#b30021)}
+    .hidden{display:none!important}
 
     #status{
       margin-top:10px;
@@ -518,10 +485,6 @@
       }
     }
 
-    /* ===============================
-       PRINT CLEANUP FIX
-       =============================== */
-
     @page{
       size:A4 portrait;
       margin:8mm;
@@ -724,7 +687,7 @@
 
         <div id="status">Ready.</div>
         <div id="badge"></div>
-        <div class="build">BUILD: FREIGHT-STEP4E-PRINTFIX1 (HTML)</div>
+        <div class="build">BUILD: FREIGHT-STEP4E-PRINTFIX2 (HTML)</div>
       </div>
     </div>
 
@@ -1094,7 +1057,7 @@
               </div>
             </div>
 
-            <div class="build">BUILD: FREIGHT-STEP4E-PRINTFIX1 (UI)</div>
+            <div class="build">BUILD: FREIGHT-STEP4E-PRINTFIX2 (UI)</div>
           </div>
 
         </div>
@@ -1103,6 +1066,6 @@
 
   </div>
 
-  ./app.js?v=freight-step4e-invoice-doc1script>
+  ./app.js?v=freight-step4e-printfix1script>
 </body>
 </html>
