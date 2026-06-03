@@ -2,7 +2,7 @@
   const SUPABASE_URL = "https://quzputmmabgcfmegarvd.supabase.co";
   const SUPABASE_KEY = "sb_publishable_UG9E0FbUzetadkz8TQN2fg_pIWx3LTO";
   const SUPABASE_CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-  const BUILD = "BUILD: FREIGHT-STEP4E-PRINTWINDOW1 (JS)";
+  const BUILD = "BUILD: FREIGHT-STEP4F-COMPANY-PROFILE1 (JS)";
 
   let client = null;
   let user = null;
@@ -13,6 +13,14 @@
   let currentSavedInvoices = [];
   let selectedInvoice = null;
   let selectedInvoiceLines = [];
+  let companyProfile = {
+    company_name: "YOUR COMPANY NAME PTE LTD",
+    company_address: "Company address line 1, Singapore",
+    company_uen: "UEN / GST Reg No: TBD",
+    payment_terms: "Payment due as per agreed credit terms.",
+    bank_details: "Bank details to be configured.",
+    invoice_footer: "This is a system-generated invoice from Freight App MVP."
+  };
 
   const actionLocks = {};
   const $ = (id) => document.getElementById(id);
@@ -20,7 +28,6 @@
   function ensureOpsStatus() {
     const appCard = $("appCard");
     if (!appCard) return;
-
     const body = appCard.querySelector(".body") || appCard;
 
     if (!$("opsStatus")) {
@@ -125,14 +132,6 @@
     return d.toLocaleString();
   }
 
-  function statusPill(statusValue) {
-    const s = String(statusValue || "").toUpperCase();
-
-    if (s === "POSTED") return `<span class="status-pill pill-posted">POSTED</span>`;
-    if (s === "VOID") return `<span class="status-pill pill-void">VOID</span>`;
-    return `<span class="status-pill pill-draft">DRAFT</span>`;
-  }
-
   function escapeHtml(v) {
     return String(v ?? "")
       .replaceAll("&", "&amp;")
@@ -140,6 +139,17 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function htmlLines(v) {
+    return escapeHtml(v || "").replace(/\n/g, "<br>");
+  }
+
+  function statusPill(statusValue) {
+    const s = String(statusValue || "").toUpperCase();
+    if (s === "POSTED") return `<span class="status-pill pill-posted">POSTED</span>`;
+    if (s === "VOID") return `<span class="status-pill pill-void">VOID</span>`;
+    return `<span class="status-pill pill-draft">DRAFT</span>`;
   }
 
   function getSellLines() {
@@ -371,6 +381,32 @@
       box.classList.add("hidden");
       box.textContent = "";
       btn.disabled = false;
+    }
+  }
+
+  async function loadCompanyInvoiceProfile() {
+    if (!client) return;
+
+    const { data, error } = await client
+      .from("company_invoice_profile")
+      .select("company_name, company_address, company_uen, payment_terms, bank_details, invoice_footer")
+      .eq("profile_key", "DEFAULT")
+      .single();
+
+    if (error) {
+      console.warn("Company invoice profile not loaded. Using defaults.", error);
+      return;
+    }
+
+    if (data) {
+      companyProfile = {
+        company_name: data.company_name || companyProfile.company_name,
+        company_address: data.company_address || companyProfile.company_address,
+        company_uen: data.company_uen || companyProfile.company_uen,
+        payment_terms: data.payment_terms || companyProfile.payment_terms,
+        bank_details: data.bank_details || companyProfile.bank_details,
+        invoice_footer: data.invoice_footer || companyProfile.invoice_footer
+      };
     }
   }
 
@@ -612,11 +648,10 @@
       <div>
         <div style="display:flex;justify-content:space-between;gap:20px;align-items:flex-start;">
           <div>
-            <div class="doc-company">YOUR COMPANY NAME PTE LTD</div>
+            <div class="doc-company">${escapeHtml(companyProfile.company_name)}</div>
             <div class="doc-muted">
-              Company address line 1<br>
-              Singapore<br>
-              UEN / GST Reg No: TBD
+              ${htmlLines(companyProfile.company_address)}<br>
+              ${escapeHtml(companyProfile.company_uen)}
             </div>
           </div>
           <div>
@@ -667,8 +702,11 @@
         </div>
 
         <div class="doc-footer">
-          This is a system-generated invoice preview from Freight App MVP.<br>
-          Payment terms, bank details, GST rules, and final company template will be configured in later steps.
+          <b>Payment Terms</b><br>
+          ${htmlLines(companyProfile.payment_terms)}<br><br>
+          <b>Bank Details</b><br>
+          ${htmlLines(companyProfile.bank_details)}<br><br>
+          ${htmlLines(companyProfile.invoice_footer)}
         </div>
       </div>
     `;
@@ -1442,11 +1480,113 @@
     resetSavedInvoices();
     status("Loading data...");
 
+    await loadCompanyInvoiceProfile();
     await loadBranches();
     await loadDefaultBranchFromProfile();
     await loadJobs();
 
     status("✅ Logged in and data loaded.");
+  }
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = src;
+      s.async = true;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  async function initSupabase() {
+    try {
+      console.log(BUILD);
+      status("Loading Supabase JS...");
+
+      if (!window.supabase || !window.supabase.createClient) {
+        await loadScript(SUPABASE_CDN);
+      }
+
+      if (!window.supabase || !window.supabase.createClient) {
+        return hardError("Supabase library failed to load.");
+      }
+
+      client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      status("Ready.");
+    } catch (e) {
+      hardError("Init crashed", e);
+    }
+  }
+
+  function creds() {
+    return {
+      email: ($("email")?.value || "").trim(),
+      password: $("password")?.value || ""
+    };
+  }
+
+  async function signIn() {
+    if (!client) return hardError("Supabase not ready yet.");
+
+    const { email, password } = creds();
+    if (!email || !password) return hardError("Email/password required.");
+
+    status("Signing in...");
+
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    if (error) return hardError("Login failed", error);
+
+    const s = await client.auth.getSession();
+    user = s?.data?.session?.user || data?.user || null;
+
+    if (!user) return hardError("Signed in but no session created.");
+
+    showApp(true);
+    await afterLogin();
+  }
+
+  async function signOut() {
+    if (!client) return;
+
+    status("Signing out...");
+
+    const { error } = await client.auth.signOut();
+    if (error) return hardError("Logout failed", error);
+
+    user = null;
+    currentJobId = null;
+    currentJobNo = null;
+    currentJobData = null;
+    currentCharges = [];
+    currentSavedInvoices = [];
+    selectedInvoice = null;
+    selectedInvoiceLines = [];
+
+    setCurrentJob(null);
+    resetProfitSummary();
+    resetInvoicePreview();
+    resetSavedInvoices();
+    showApp(false);
+    status("Ready.");
+  }
+
+  async function restoreSession() {
+    if (!client) return;
+
+    status("Checking session...");
+
+    const { data, error } = await client.auth.getSession();
+    if (error) return hardError("Session error", error);
+
+    if (data?.session?.user) {
+      user = data.session.user;
+      showApp(true);
+      await afterLogin();
+    } else {
+      showApp(false);
+      status("Ready.");
+    }
   }
 
   function bindHard(id, fn, lockKey) {
