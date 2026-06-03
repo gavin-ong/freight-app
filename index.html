@@ -6,6 +6,7 @@
 <title>Freight App MVP</title>
 
 <style>
+
 :root{
   --bg1:#071224;
   --bg2:#0a2a45;
@@ -82,7 +83,6 @@ body{
   height:28px;
   border-radius:10px;
   background:linear-gradient(135deg,#3fbbff,#00ffc4);
-  flex:0 0 auto;
 }
 
 .title{
@@ -125,21 +125,8 @@ textarea{
   outline:none;
 }
 
-input:focus,
-select:focus,
-textarea:focus{
-  border-color:rgba(63,187,255,.70);
-  box-shadow:0 0 0 3px rgba(63,187,255,.12);
-}
-
-select option{
-  color:#111;
-  background:#fff;
-}
-
-input::placeholder,
-textarea::placeholder{
-  color:rgba(233,241,255,.45);
+textarea{
+  resize:vertical;
 }
 
 .row2{
@@ -156,7 +143,7 @@ textarea::placeholder{
 
 .row4{
   display:grid;
-  grid-template-columns:1.5fr .7fr .7fr .7fr;
+  grid-template-columns:1.4fr .6fr .7fr .7fr;
   gap:10px;
 }
 
@@ -166,88 +153,45 @@ textarea::placeholder{
   gap:20px;
   align-items:start;
   width:100%;
-  margin-top:16px;
 }
 
 .panel{
   background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.08);
   border-radius:14px;
-  padding:16px;
+  padding:14px;
 
   width:100%;
   max-width:100%;
 
   position:sticky;
-  top:20px;
+  top:16px;
 
   overflow:hidden;
 }
 
-.summary-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:10px;
-}
-
-.metric{
-  padding:12px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.08);
-  background:rgba(255,255,255,.05);
-}
-
-.metric-label{
-  font-size:11px;
-  color:var(--muted);
-  margin-bottom:6px;
-}
-
-.metric-value{
-  font-size:16px;
-  font-weight:900;
-  font-family:var(--mono);
-  word-break:break-word;
-}
-
-.profit-good{
-  color:var(--ok);
-}
-
-.profit-bad{
-  color:var(--err);
-}
-
-.profit-flat{
-  color:var(--warn);
+.section{
+  margin-top:16px;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.08);
 }
 
 .btnbar{
   display:flex;
-  flex-wrap:wrap;
   gap:10px;
+  flex-wrap:wrap;
   margin-top:14px;
 }
 
 button{
   cursor:pointer;
-  min-height:38px;
+  min-height:36px;
   border-radius:10px;
   border:1px solid rgba(255,255,255,.10);
   background:rgba(255,255,255,.09);
   color:var(--text);
   padding:0 14px;
   font-weight:900;
-}
-
-button:hover{
-  filter:brightness(1.08);
-}
-
-button:disabled{
-  opacity:.55;
-  cursor:not-allowed;
 }
 
 .primary{
@@ -271,24 +215,6 @@ button:disabled{
   display:none!important;
 }
 
-.section{
-  margin-top:18px;
-  padding-top:18px;
-  border-top:1px solid rgba(255,255,255,.08);
-}
-
-.chip{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:8px 12px;
-  border-radius:999px;
-  background:rgba(15,36,70,.8);
-  border:1px solid rgba(255,255,255,.08);
-  color:var(--muted);
-  font-size:12px;
-}
-
 table{
   width:100%;
   border-collapse:collapse;
@@ -301,32 +227,12 @@ td{
   border-bottom:1px solid rgba(255,255,255,.08);
   padding:10px 8px;
   text-align:left;
-  vertical-align:top;
-}
-
-th{
-  color:var(--muted);
-  font-weight:900;
-}
-
-tr:hover{
-  background:rgba(255,255,255,.03);
-  cursor:pointer;
 }
 
 .note{
   opacity:.75;
   font-size:12px;
   margin-top:8px;
-  line-height:1.45;
-}
-
-.invoice-box,
-.saved-invoice,
-.warning-box,
-.doc-preview{
-  width:100%;
-  max-width:100%;
 }
 
 .invoice-box{
@@ -338,67 +244,18 @@ tr:hover{
   overflow:auto;
 }
 
-.invoice-head{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-bottom:10px;
-}
-
-.invoice-label{
-  color:var(--muted);
-  font-size:11px;
-  margin-bottom:4px;
-}
-
-.invoice-value{
-  font-weight:900;
-  font-family:var(--mono);
-  word-break:break-word;
-}
-
-.invoice-total{
-  margin-top:10px;
-  padding:10px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(0,200,150,.08);
-  color:var(--ok);
-  font-weight:900;
-}
-
-.saved-invoice{
-  margin-top:10px;
-  padding:10px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(31,99,255,.12);
-  font-size:12px;
-}
-
-.warning-box{
-  margin-top:10px;
-  padding:10px;
-  border-radius:12px;
-  border:1px solid rgba(255,209,102,.30);
-  background:rgba(255,209,102,.08);
-  color:var(--warn);
-}
-
 .doc-preview{
   margin-top:10px;
   background:#fff;
   color:#111;
   border-radius:12px;
   padding:18px;
-  overflow:auto;
 }
 
 .build{
-  margin-top:12px;
+  margin-top:10px;
   font-size:11px;
-  opacity:.7;
-  font-family:var(--mono);
+  opacity:.75;
 }
 
 @media (max-width:1200px){
@@ -421,9 +278,7 @@ tr:hover{
 
   .row2,
   .row3,
-  .row4,
-  .summary-grid,
-  .invoice-head{
+  .row4{
     grid-template-columns:1fr;
   }
 
@@ -431,6 +286,7 @@ tr:hover{
     grid-template-columns:1fr;
   }
 }
+
 </style>
 </head>
 
@@ -438,12 +294,14 @@ tr:hover{
 
 <div class="wrap">
 
-  <!-- KEEP YOUR EXISTING HTML BODY CONTENT HERE EXACTLY -->
-  <!-- DO NOT CHANGE IDS -->
+  <!-- PASTE YOUR ORIGINAL BODY CONTENT HERE -->
+  <!-- STARTING FROM: -->
+  <!-- <div class="card login-width" id="loginCard"> -->
+  <!-- UNTIL THE FINAL </div> BEFORE script tag -->
 
 </div>
 
-<script src="./app.js?v=freight-step4h-uifix1"></script>
+<script src="./app.js?v=freight-step4h-uifix-final"></script>
 
 </body>
 </html>
