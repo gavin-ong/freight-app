@@ -2,7 +2,7 @@
   const SUPABASE_URL = "https://quzputmmabgcfmegarvd.supabase.co";
   const SUPABASE_KEY = "sb_publishable_UG9E0FbUzetadkz8TQN2fg_pIWx3LTO";
   const SUPABASE_CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-  const BUILD = "BUILD: FREIGHT-STEP4B-INVOICE-DRAFT1 (JS)";
+  const BUILD = "BUILD: FREIGHT-STEP4C-INVOICE-LIST1 (JS)";
 
   let client = null;
   let user = null;
@@ -10,6 +10,7 @@
   let currentJobNo = null;
   let currentJobData = null;
   let currentCharges = [];
+  let currentSavedInvoices = [];
 
   const actionLocks = {};
   const $ = (id) => document.getElementById(id);
@@ -115,6 +116,13 @@
     return s || fallback;
   }
 
+  function shortDate(v) {
+    if (!v) return "-";
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return "-";
+    return d.toLocaleString();
+  }
+
   function getSellLines() {
     return (currentCharges || []).filter(c => {
       return String(c.type || "").trim().toUpperCase() === "SELL";
@@ -161,6 +169,11 @@
     if ($("invoiceLinesBody")) $("invoiceLinesBody").innerHTML = "";
     if ($("invoiceTotalBox")) $("invoiceTotalBox").textContent = "No SELL charges selected.";
 
+    if ($("existingDraftWarning")) {
+      $("existingDraftWarning").classList.add("hidden");
+      $("existingDraftWarning").textContent = "";
+    }
+
     if ($("savedInvoiceBox")) {
       $("savedInvoiceBox").classList.add("hidden");
       $("savedInvoiceBox").textContent = "";
@@ -168,6 +181,27 @@
 
     if ($("invoiceNote")) {
       $("invoiceNote").textContent = "Invoice draft includes SELL charges only. Saving creates invoice header and invoice lines.";
+    }
+  }
+
+  function resetSavedInvoices() {
+    currentSavedInvoices = [];
+
+    if ($("savedInvoicesBody")) $("savedInvoicesBody").innerHTML = "";
+    if ($("savedInvoiceLinesBody")) $("savedInvoiceLinesBody").innerHTML = "";
+
+    if ($("savedInvoicesNote")) {
+      $("savedInvoicesNote").textContent = "Select a job to view saved invoices.";
+    }
+
+    if ($("loadedInvoiceBox")) {
+      $("loadedInvoiceBox").classList.add("hidden");
+      $("loadedInvoiceBox").textContent = "";
+    }
+
+    if ($("existingDraftWarning")) {
+      $("existingDraftWarning").classList.add("hidden");
+      $("existingDraftWarning").textContent = "";
     }
   }
 
@@ -260,6 +294,29 @@
     }
   }
 
+  function updateExistingDraftWarning() {
+    const existingDraft = (currentSavedInvoices || []).find(inv => {
+      return String(inv.invoice_status || "").toUpperCase() === "DRAFT";
+    });
+
+    const box = $("existingDraftWarning");
+    const btn = $("btnSaveInvoiceDraft");
+
+    if (!box || !btn) return;
+
+    if (existingDraft) {
+      box.classList.remove("hidden");
+      box.textContent =
+        `Existing draft found for this job: ${existingDraft.invoice_no}. ` +
+        `To avoid duplicate draft invoices, Save Invoice Draft is disabled for this selected job.`;
+      btn.disabled = true;
+    } else {
+      box.classList.add("hidden");
+      box.textContent = "";
+      btn.disabled = false;
+    }
+  }
+
   function loadScript(src) {
     return new Promise((resolve, reject) => {
       const s = document.createElement("script");
@@ -331,10 +388,12 @@
     currentJobNo = null;
     currentJobData = null;
     currentCharges = [];
+    currentSavedInvoices = [];
 
     setCurrentJob(null);
     resetProfitSummary();
     resetInvoicePreview();
+    resetSavedInvoices();
     showApp(false);
     status("Ready.");
   }
@@ -456,8 +515,18 @@
             $("savedInvoiceBox").textContent = "";
           }
 
+          if ($("loadedInvoiceBox")) {
+            $("loadedInvoiceBox").classList.add("hidden");
+            $("loadedInvoiceBox").textContent = "";
+          }
+
+          if ($("savedInvoiceLinesBody")) {
+            $("savedInvoiceLinesBody").innerHTML = "";
+          }
+
           await loadJobDetails(jid);
           await loadCharges();
+          await loadSavedInvoices();
         });
       });
 
@@ -670,6 +739,14 @@
   async function saveInvoiceDraft() {
     if (!currentJobId) return hardError("Select a job first.");
 
+    const existingDraft = (currentSavedInvoices || []).find(inv => {
+      return String(inv.invoice_status || "").toUpperCase() === "DRAFT";
+    });
+
+    if (existingDraft) {
+      return hardError(`Existing draft already exists for this job: ${existingDraft.invoice_no}. Load it from Saved Invoices instead.`);
+    }
+
     const sellLines = getSellLines();
 
     if (!sellLines.length) {
@@ -733,13 +810,126 @@
         `Total:\n${totalText}`;
     }
 
+    await loadSavedInvoices();
+
     showOk(`Invoice draft saved: ${inv.invoice_no}`);
+  }
+
+  async function loadSavedInvoices() {
+    const tbody = $("savedInvoicesBody");
+
+    if (!currentJobId) {
+      resetSavedInvoices();
+      return;
+    }
+
+    if (tbody) tbody.innerHTML = "";
+    if ($("savedInvoiceLinesBody")) $("savedInvoiceLinesBody").innerHTML = "";
+    if ($("loadedInvoiceBox")) {
+      $("loadedInvoiceBox").classList.add("hidden");
+      $("loadedInvoiceBox").textContent = "";
+    }
+
+    status("Loading saved invoices...");
+
+    const { data, error } = await client
+      .from("invoices")
+      .select("invoice_id, invoice_no, invoice_status, total_amount, currency_summary, created_at")
+      .eq("job_id", currentJobId)
+      .order("created_at", { ascending: false });
+
+    if (error) return hardError("Saved invoices load failed", error);
+
+    currentSavedInvoices = data || [];
+
+    if (tbody) {
+      currentSavedInvoices.forEach(inv => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${inv.invoice_no ?? ""}</td>
+          <td>${inv.invoice_status ?? ""}</td>
+          <td>${money(inv.total_amount || 0)}</td>
+          <td>${shortDate(inv.created_at)}</td>
+        `;
+
+        tr.addEventListener("click", async () => {
+          await runLocked("loadInvoiceLines", async () => {
+            await loadSavedInvoiceLines(inv);
+          });
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    if ($("savedInvoicesNote")) {
+      $("savedInvoicesNote").textContent =
+        currentSavedInvoices.length
+          ? `${currentSavedInvoices.length} saved invoice(s) found for this job. Click one to load lines.`
+          : "No saved invoices found for this job.";
+    }
+
+    updateExistingDraftWarning();
+
+    status(`Saved invoices loaded (${currentSavedInvoices.length}).`);
+  }
+
+  async function loadSavedInvoiceLines(inv) {
+    if (!inv?.invoice_id) return hardError("No invoice selected.");
+
+    status(`Loading invoice ${inv.invoice_no}...`);
+
+    const { data, error } = await client
+      .from("invoice_lines")
+      .select("charge_code, description, qty, uom, rate, amount, currency, source_type, created_at")
+      .eq("invoice_id", inv.invoice_id)
+      .order("created_at", { ascending: true });
+
+    if (error) return hardError("Saved invoice lines load failed", error);
+
+    const tbody = $("savedInvoiceLinesBody");
+    if (tbody) tbody.innerHTML = "";
+
+    (data || []).forEach(line => {
+      if (!tbody) return;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${line.charge_code ?? ""}</td>
+        <td>${line.description ?? ""}</td>
+        <td>${line.qty ?? ""}</td>
+        <td>${line.rate ?? ""}</td>
+        <td>${money(line.amount || 0)}</td>
+        <td>${line.currency ?? ""}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const totalText = inv.currency_summary
+      ? Object.entries(inv.currency_summary)
+          .map(([cur, total]) => `${cur} ${money(total)}`)
+          .join("\n")
+      : money(inv.total_amount || 0);
+
+    if ($("loadedInvoiceBox")) {
+      $("loadedInvoiceBox").classList.remove("hidden");
+      $("loadedInvoiceBox").textContent =
+        `Loaded saved invoice\n` +
+        `Invoice No: ${inv.invoice_no}\n` +
+        `Status: ${inv.invoice_status}\n` +
+        `Lines: ${(data || []).length}\n` +
+        `Total:\n${totalText}`;
+    }
+
+    status(`Invoice ${inv.invoice_no} loaded.`);
   }
 
   async function afterLogin() {
     ensureOpsStatus();
     resetProfitSummary();
     resetInvoicePreview();
+    resetSavedInvoices();
     status("Loading data...");
 
     await loadBranches();
@@ -779,6 +969,7 @@
     bindHard("btnRefreshCharges", loadCharges, "refreshCharges");
     bindHard("btnSaveJob", saveJobDetails, "saveJob");
     bindHard("btnSaveInvoiceDraft", saveInvoiceDraft, "saveInvoiceDraft");
+    bindHard("btnRefreshInvoices", loadSavedInvoices, "refreshInvoices");
 
     ["qty", "rate"].forEach(id => {
       const el = $(id);
@@ -804,6 +995,7 @@
     ensureOpsStatus();
     resetProfitSummary();
     resetInvoicePreview();
+    resetSavedInvoices();
 
     await initSupabase();
 
