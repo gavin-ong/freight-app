@@ -131,13 +131,6 @@ textarea{
   resize:vertical;
 }
 
-input:focus,
-select:focus,
-textarea:focus{
-  border-color:rgba(63,187,255,.70);
-  box-shadow:0 0 0 3px rgba(63,187,255,.12);
-}
-
 .row2{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -170,10 +163,8 @@ textarea:focus{
   border:1px solid rgba(255,255,255,.08);
   border-radius:16px;
   padding:18px;
-
   position:sticky;
   top:16px;
-
   overflow:visible;
 }
 
@@ -227,10 +218,6 @@ button{
   font-weight:900;
 }
 
-button:hover{
-  filter:brightness(1.08);
-}
-
 .primary{
   background:linear-gradient(180deg,#1f63ff,#0f3db3);
 }
@@ -280,10 +267,6 @@ td{
 th{
   color:var(--muted);
   font-weight:900;
-}
-
-tr:hover{
-  background:rgba(255,255,255,.03);
 }
 
 .note{
@@ -355,6 +338,28 @@ tr:hover{
   color:#111;
   border-radius:12px;
   padding:18px;
+  overflow:auto;
+  min-height:120px;
+}
+
+.status-pill{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:900;
+}
+
+.pill-draft{
+  background:#444;
+}
+
+.pill-posted{
+  background:#008c6e;
+}
+
+.pill-void{
+  background:#b30021;
 }
 
 .build{
@@ -405,13 +410,19 @@ tr:hover{
 <div class="card login-width" id="loginCard">
 
 <div class="head">
+
 <div class="dot"></div>
 
 <div>
-<div class="title">Freight App MVP</div>
-<div class="sub">
-Login to manage jobs, details, charges and invoices
+
+<div class="title">
+Freight App MVP
 </div>
+
+<div class="sub">
+Login to manage jobs, charges and invoices
+</div>
+
 </div>
 </div>
 
@@ -426,11 +437,20 @@ Login to manage jobs, details, charges and invoices
 <input id="password" type="password"/>
 
 <div class="btnbar">
-<button id="btnLogin" class="primary">Login</button>
-<button id="btnLogout" class="hidden">Logout</button>
+
+<button id="btnLogin" class="primary">
+Login
+</button>
+
+<button id="btnLogout" class="hidden">
+Logout
+</button>
+
 </div>
 
-<div id="status">Ready.</div>
+<div id="status">
+Ready.
+</div>
 
 <div class="build">
 BUILD: FREIGHT-STEP4H-UIFIX-FINAL
@@ -442,13 +462,19 @@ BUILD: FREIGHT-STEP4H-UIFIX-FINAL
 <div class="card hidden" id="appCard">
 
 <div class="head">
+
 <div class="dot"></div>
 
 <div>
-<div class="title">Operations</div>
-<div class="sub">
-Jobs • Charges • Profitability • Invoice Status • Document Preview
+
+<div class="title">
+Operations
 </div>
+
+<div class="sub">
+Jobs • Charges • Profitability • Invoice Workflow
+</div>
+
 </div>
 </div>
 
@@ -523,7 +549,9 @@ Create Job
 </div>
 
 <div class="btnbar">
-<button id="btnRefreshJobs">Refresh Jobs</button>
+<button id="btnRefreshJobs">
+Refresh Jobs
+</button>
 </div>
 
 <table>
@@ -612,7 +640,9 @@ Add Charge
 </div>
 
 <div class="btnbar">
-<button id="btnRefreshCharges">Refresh Charges</button>
+<button id="btnRefreshCharges">
+Refresh Charges
+</button>
 </div>
 
 <table>
@@ -631,6 +661,157 @@ Add Charge
 <tbody id="chargesTableBody"></tbody>
 
 </table>
+
+</div>
+
+<div class="section">
+
+<h2>Invoice Draft</h2>
+
+<div class="invoice-box">
+
+<div class="invoice-head">
+
+<div>
+<div class="invoice-label">Job No</div>
+<div id="invJobNo" class="invoice-value">-</div>
+</div>
+
+<div>
+<div class="invoice-label">Bill To</div>
+<div id="invBillTo" class="invoice-value">-</div>
+</div>
+
+<div>
+<div class="invoice-label">Route</div>
+<div id="invRoute" class="invoice-value">-</div>
+</div>
+
+<div>
+<div class="invoice-label">Incoterm</div>
+<div id="invIncoterm" class="invoice-value">-</div>
+</div>
+
+</div>
+
+<table>
+
+<thead>
+<tr>
+<th>Code</th>
+<th>Description</th>
+<th>Qty</th>
+<th>Rate</th>
+<th>Amount</th>
+<th>Currency</th>
+</tr>
+</thead>
+
+<tbody id="invoiceLinesBody"></tbody>
+
+</table>
+
+<div id="invoiceTotalBox" class="invoice-total">
+No SELL charges selected.
+</div>
+
+<div class="note" id="invoiceNote">
+Invoice draft includes SELL charges only.
+</div>
+
+<div id="savedInvoiceBox" class="saved-invoice hidden"></div>
+
+<div id="existingDraftWarning" class="warning-box hidden"></div>
+
+<div class="btnbar">
+
+<button id="btnSaveInvoiceDraft" class="good">
+Save Invoice Draft
+</button>
+
+<button id="btnRefreshInvoices">
+Refresh Invoices
+</button>
+
+<button id="btnPostInvoice" class="primary">
+Post Invoice
+</button>
+
+<button id="btnVoidInvoice" class="danger">
+Void Invoice
+</button>
+
+<button id="btnBuildInvoiceDoc">
+Build Document
+</button>
+
+<button id="btnPrintInvoiceDoc" class="warn">
+Print Invoice
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="section">
+
+<h2>Saved Invoices</h2>
+
+<div class="note" id="savedInvoicesNote">
+Select a job to view saved invoices.
+</div>
+
+<table>
+
+<thead>
+<tr>
+<th>Invoice No</th>
+<th>Status</th>
+<th>Total</th>
+<th>Created</th>
+</tr>
+</thead>
+
+<tbody id="savedInvoicesBody"></tbody>
+
+</table>
+
+<div id="loadedInvoiceBox" class="saved-invoice hidden"></div>
+
+</div>
+
+<div class="section">
+
+<h2>Saved Invoice Lines</h2>
+
+<table>
+
+<thead>
+<tr>
+<th>Code</th>
+<th>Description</th>
+<th>Qty</th>
+<th>Rate</th>
+<th>Amount</th>
+<th>Currency</th>
+</tr>
+</thead>
+
+<tbody id="savedInvoiceLinesBody"></tbody>
+
+</table>
+
+</div>
+
+<div class="section">
+
+<h2>Invoice Document Preview</h2>
+
+<div class="doc-preview" id="invoiceDocumentBody">
+No invoice document built yet.
+</div>
 
 </div>
 
@@ -688,9 +869,11 @@ Add Charge
 </div>
 
 <div class="btnbar">
+
 <button id="btnSaveJob" class="primary">
 Save Job Details
 </button>
+
 </div>
 
 <div class="section">
