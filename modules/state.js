@@ -20,7 +20,7 @@ export function defaultCharge(jobCurrency = 'USD', defaultFxRate = 1) {
   return {
     code: '',
     description: '',
-    chargeType: 'revenue',
+    chargeType: 'AR',
     currency: (jobCurrency || 'USD').toUpperCase(),
     fxRate: Number(defaultFxRate || 1) || 1,
     qty: 1,
@@ -74,6 +74,7 @@ export function normaliseJob(job, index = 0) {
       ? job.charges.map(c => ({
           ...defaultCharge(currency, defaultFxRate),
           ...c,
+          chargeType: (String(c.chargeType || 'AR').toUpperCase() === 'AP') ? 'AP' : 'AR',
           currency: (c.currency || currency).toUpperCase(),
           fxRate: safeNumber(c.fxRate, defaultFxRate) || 1,
           qty: safeNumber(c.qty, 1),
