@@ -1,10 +1,11 @@
-import { escapeHtml, fmtMoney, calculatedChargeAmount } from './utils.js';
+import { escapeHtml, fmtMoney, calculatedChargeAmount, getInvoiceCharges } from './utils.js';
 
 export function buildPrintHtml(job, companyProfile) {
   const inv = job.invoices[0];
   if (!inv) return '';
+  const invoiceCharges = getInvoiceCharges(job);
   const addressLines = [companyProfile.address1, companyProfile.address2, companyProfile.country, `UEN / GST Reg No: ${companyProfile.regNo}`].filter(Boolean).join('<br>');
-  const lineRows = job.charges.map((c, idx) => `
+  const lineRows = invoiceCharges.map((c, idx) => `
     <tr>
       <td class="center">${idx + 1}</td>
       <td>${escapeHtml(c.code || '')}</td>
