@@ -1,14 +1,52 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <title>Freight MVP</title>
+  <title>Freight MVP</title><html>
+
   <style>
-    body { font-family: Arial; padding: 20px; }
-    input, select, button { margin: 5px; padding: 5px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-    table, th, td { border: 1px solid #ccc; }
-    th, td { padding: 5px; text-align: left; }
-    .section { margin-top: 20px; }
+    body {
+      font-family: Arial;
+      background: #eef1f5;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2 { margin-bottom: 10px; }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    input, select, button {
+      padding: 5px;
+      margin: 5px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background: #f3f3f3;
+    }
+
+    .invoice-print {
+      display: none;
+    }
   </style>
 </head>
 
@@ -16,13 +54,11 @@
 
 <h2>Freight Job System</h2>
 
-<!-- JOB SECTION -->
-<div class="section">
+<!-- JOB + DETAILS -->
+<div class="card">
   <button onclick="createJob()">Create Job</button>
   <select id="jobList" onchange="loadJob()"></select>
-</div>
 
-<div class="section">
   <h3>Job Details</h3>
   Customer: <input id="customer"><br>
   Shipper: <input id="shipper"><br>
@@ -35,11 +71,11 @@
 </div>
 
 <!-- CHARGES -->
-<div class="section">
+<div class="card">
   <h3>Charges</h3>
   <button onclick="addCharge()">Add Charge</button>
 
-  <table id="chargesTable">
+  <table>
     <thead>
       <tr>
         <th>Description</th>
@@ -47,31 +83,54 @@
         <th>Unit Price</th>
       </tr>
     </thead>
-    <tbody></tbody>
+    <tbody id="chargesTable"></tbody>
   </table>
 </div>
 
 <!-- INVOICE -->
-<div class="section">
+<div class="card">
   <h3>Invoice</h3>
 
-  <button onclick="generateInvoice()">Generate Invoice</button>
-  <button onclick="postInvoice()">Post Invoice</button>
-  <button onclick="voidInvoice()">Void Invoice</button>
+  <button onclick="generateInvoice()">Generate</button>
+  <button onclick="postInvoice()">Post</button>
+  <button onclick="voidInvoice()">Void</button>
+  <button onclick="printInvoice()">Print</button>
 
-  <table id="invoiceTable">
+  <table>
     <thead>
       <tr>
-        <th>Invoice No</th>
+        <th>No</th>
         <th>Status</th>
         <th>Total</th>
       </tr>
     </thead>
-    <tbody></tbody>
+    <tbody id="invoiceTable"></tbody>
   </table>
+</div>
+
+<!-- PRINT TEMPLATE -->
+<div id="printArea" class="invoice-print">
+  <h2>INVOICE</h2>
+  <p><b>Invoice No:</b> <span id="pInvNo"></span></p>
+  <p><b>Customer:</b> <span id="pCust"></span></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th>Qty</th>
+        <th>Unit</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody id="pCharges"></tbody>
+  </table>
+
+  <h3>Total: <span id="pTotal"></span></h3>
 </div>
 
 <script src="app.js"></script>
 
 </body>
 </html>
+<head>
