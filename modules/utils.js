@@ -23,14 +23,23 @@ export function invoiceNo() {
 export function calculatedChargeAmount(charge) {
   return Number(charge.qty || 0) * Number(charge.unitPrice || 0) * Number(charge.fxRate || 1);
 }
+export function isARCharge(charge) {
+  return String(charge.chargeType || 'AR').toUpperCase() === 'AR';
+}
+export function isAPCharge(charge) {
+  return String(charge.chargeType || 'AR').toUpperCase() === 'AP';
+}
 export function calcSummary(job) {
   let revenue = 0, cost = 0;
   for (const c of job.charges) {
     const val = calculatedChargeAmount(c);
-    if ((c.chargeType || 'revenue') === 'cost') cost += val;
+    if (isAPCharge(c)) cost += val;
     else revenue += val;
   }
   const profit = revenue - cost;
   const margin = revenue ? (profit / revenue) * 100 : 0;
   return { revenue, cost, profit, margin };
+}
+export function getInvoiceCharges(job) {
+  return job.charges.filter(isARCharge);
 }
