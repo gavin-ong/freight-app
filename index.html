@@ -11,151 +11,71 @@
     <div class="topbar">
       <div class="brand">
         <h1>Freight App MVP</h1>
-        <div class="subtitle">Modular Build · Step 4J + 4K + 4L + 5-ready</div>
+        <div class="subtitle">Step 4X-A · AR/AP model + full-width charges</div>
       </div>
 
       <div class="toolbar">
-        <span class="build-pill">BUILD 5M</span>
+        <span class="build-pill">BUILD 5M-A</span>
         <button class="btn btn-secondary" id="btnCreateJob">Create Job</button>
         <select id="jobList" style="min-width:240px;"></select>
         <button class="btn btn-danger" id="btnLogout">Logout</button>
       </div>
     </div>
 
-    <div class="workspace-grid">
-      <div class="right-stack">
-        <div class="card">
-          <div class="card-header">
-            <h2>Job Details</h2>
-            <span class="muted">Saved locally in your browser</span>
-          </div>
-          <div class="card-body">
-            <div class="field-grid compact">
-              <label for="jobNo">Job No</label>
-              <input id="jobNo" readonly>
-
-              <label for="customer">Bill To / Customer</label>
-              <input id="customer" placeholder="e.g. SCASHA001">
-
-              <label for="shipper">Shipper</label>
-              <input id="shipper" placeholder="Shipper name">
-
-              <label for="consignee">Consignee</label>
-              <input id="consignee" placeholder="Consignee name">
-
-              <label for="mode">Mode</label>
-              <input id="mode" placeholder="SEA / AIR / TRUCK">
-
-              <label for="incoterm">Incoterm</label>
-              <input id="incoterm" placeholder="FOB / CIF">
-
-              <label for="pol">POL</label>
-              <input id="pol" placeholder="e.g. SGSIN">
-
-              <label for="pod">POD</label>
-              <input id="pod" placeholder="e.g. CNSHA">
-
-              <label for="originCountry">Origin</label>
-              <input id="originCountry" placeholder="e.g. SG">
-
-              <label for="destinationCountry">Destination</label>
-              <input id="destinationCountry" placeholder="e.g. CN">
-
-              <label for="currency">Invoice Currency</label>
-              <input id="currency" placeholder="USD / SGD">
-
-              <label for="defaultFxRate">Default FX Rate</label>
-              <input id="defaultFxRate" type="number" min="0" step="0.0001" placeholder="1.0000">
-
-              <label for="eta">ETA</label>
-              <input id="eta" type="date">
-
-              <label for="etd">ETD</label>
-              <input id="etd" type="date">
-            </div>
-
-            <div class="job-actions">
-              <button class="btn btn-primary" id="btnSaveJob">Save Job</button>
-              <button class="btn btn-ghost" id="btnResetJob">Reset Form</button>
-            </div>
-          </div>
+    <div class="top-grid">
+      <div class="card">
+        <div class="card-header">
+          <h2>Job Details</h2>
+          <span class="muted">Saved locally in your browser</span>
         </div>
+        <div class="card-body">
+          <div class="field-grid compact">
+            <label for="jobNo">Job No</label>
+            <input id="jobNo" readonly>
 
-        <div class="card">
-          <div class="card-header">
-            <h2>Charges</h2>
-            <button class="btn btn-secondary" id="btnAddCharge">Add Charge</button>
+            <label for="customer">Bill To / Customer</label>
+            <input id="customer" placeholder="e.g. SCASHA001">
+
+            <label for="shipper">Shipper</label>
+            <input id="shipper" placeholder="Shipper name">
+
+            <label for="consignee">Consignee</label>
+            <input id="consignee" placeholder="Consignee name">
+
+            <label for="mode">Mode</label>
+            <input id="mode" placeholder="SEA / AIR / TRUCK">
+
+            <label for="incoterm">Incoterm</label>
+            <input id="incoterm" placeholder="FOB / CIF">
+
+            <label for="pol">POL</label>
+            <input id="pol" placeholder="e.g. SGSIN">
+
+            <label for="pod">POD</label>
+            <input id="pod" placeholder="e.g. CNSHA">
+
+            <label for="originCountry">Origin</label>
+            <input id="originCountry" placeholder="e.g. SG">
+
+            <label for="destinationCountry">Destination</label>
+            <input id="destinationCountry" placeholder="e.g. CN">
+
+            <label for="currency">Invoice Currency</label>
+            <input id="currency" placeholder="USD / SGD">
+
+            <label for="defaultFxRate">Default FX Rate</label>
+            <input id="defaultFxRate" type="number" min="0" step="0.0001" placeholder="1.0000">
+
+            <label for="eta">ETA</label>
+            <input id="eta" type="date">
+
+            <label for="etd">ETD</label>
+            <input id="etd" type="date">
           </div>
-          <div class="card-body">
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th style="width:56px;">#</th>
-                    <th style="width:110px;">Code</th>
-                    <th>Description</th>
-                    <th style="width:110px;">Type</th>
-                    <th style="width:110px;">Currency</th>
-                    <th style="width:110px;">FX Rate</th>
-                    <th style="width:90px;">Qty</th>
-                    <th style="width:90px;">UOM</th>
-                    <th style="width:120px;">Rate</th>
-                    <th style="width:120px;">Converted</th>
-                    <th style="width:90px;">Action</th>
-                  </tr>
-                </thead>
-                <tbody id="chargesBody"></tbody>
-              </table>
-            </div>
 
-            <div class="summary-bar">
-              <div class="summary-box">
-                <div class="label">Revenue</div>
-                <div class="value" id="sumRevenue">0.00</div>
-              </div>
-              <div class="summary-box">
-                <div class="label">Cost</div>
-                <div class="value" id="sumCost">0.00</div>
-              </div>
-              <div class="summary-box">
-                <div class="label">Profit</div>
-                <div class="value" id="sumProfit">0.00</div>
-              </div>
-              <div class="summary-box">
-                <div class="label">Margin %</div>
-                <div class="value" id="sumMargin">0.00%</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <h2>Invoice</h2>
-            <span class="muted">Print template now uses Company Profile settings</span>
-          </div>
-          <div class="card-body">
-            <div class="invoice-actions">
-              <button class="btn btn-primary" id="btnGenerateInvoice">Generate Invoice</button>
-              <button class="btn btn-success" id="btnPostInvoice">Post Invoice</button>
-              <button class="btn btn-warning" id="btnVoidInvoice">Void Invoice</button>
-              <button class="btn btn-secondary" id="btnPrintInvoice">Print Invoice</button>
-            </div>
-
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th style="width:260px;">Invoice No</th>
-                    <th style="width:140px;">Status</th>
-                    <th style="width:220px;">Date</th>
-                    <th style="width:120px;">Currency</th>
-                    <th style="width:140px;">Total</th>
-                  </tr>
-                </thead>
-                <tbody id="invoiceBody"></tbody>
-              </table>
-            </div>
+          <div class="job-actions">
+            <button class="btn btn-primary" id="btnSaveJob">Save Job</button>
+            <button class="btn btn-ghost" id="btnResetJob">Reset Form</button>
           </div>
         </div>
       </div>
@@ -207,6 +127,85 @@
             <button class="btn btn-primary" id="btnSaveCompany">Save Company Profile</button>
             <button class="btn btn-ghost" id="btnResetCompany">Reset Company Form</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card full-width-card">
+      <div class="card-header">
+        <h2>Charges</h2>
+        <div class="header-inline-note">AR = Accounts Receivable (invoice) · AP = Accounts Payable (cost only)</div>
+        <button class="btn btn-secondary" id="btnAddCharge">Add Charge</button>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap full-width-table-wrap">
+          <table class="charges-table">
+            <thead>
+              <tr>
+                <th style="width:52px;">#</th>
+                <th style="width:95px;">Code</th>
+                <th>Description</th>
+                <th style="width:92px;">AR / AP</th>
+                <th style="width:96px;">Cur</th>
+                <th style="width:90px;">FX</th>
+                <th style="width:80px;">Qty</th>
+                <th style="width:86px;">UOM</th>
+                <th style="width:110px;">Rate</th>
+                <th style="width:120px;">Converted</th>
+                <th style="width:82px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="chargesBody"></tbody>
+          </table>
+        </div>
+
+        <div class="summary-bar summary-bar-wide">
+          <div class="summary-box">
+            <div class="label">AR Revenue</div>
+            <div class="value" id="sumRevenue">0.00</div>
+          </div>
+          <div class="summary-box">
+            <div class="label">AP Cost</div>
+            <div class="value" id="sumCost">0.00</div>
+          </div>
+          <div class="summary-box">
+            <div class="label">Profit</div>
+            <div class="value" id="sumProfit">0.00</div>
+          </div>
+          <div class="summary-box">
+            <div class="label">Margin %</div>
+            <div class="value" id="sumMargin">0.00%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card full-width-card">
+      <div class="card-header">
+        <h2>Invoice</h2>
+        <span class="muted">Only AR charges are included in invoice and print output</span>
+      </div>
+      <div class="card-body">
+        <div class="invoice-actions">
+          <button class="btn btn-primary" id="btnGenerateInvoice">Generate Invoice</button>
+          <button class="btn btn-success" id="btnPostInvoice">Post Invoice</button>
+          <button class="btn btn-warning" id="btnVoidInvoice">Void Invoice</button>
+          <button class="btn btn-secondary" id="btnPrintInvoice">Print Invoice</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:260px;">Invoice No</th>
+                <th style="width:140px;">Status</th>
+                <th style="width:220px;">Date</th>
+                <th style="width:120px;">Currency</th>
+                <th style="width:140px;">Total</th>
+              </tr>
+            </thead>
+            <tbody id="invoiceBody"></tbody>
+          </table>
         </div>
       </div>
     </div>
