@@ -25,7 +25,9 @@ export function defaultCharge(jobCurrency = 'USD', defaultFxRate = 1) {
     fxRate: Number(defaultFxRate || 1) || 1,
     qty: 1,
     uom: 'EA',
-    unitPrice: 0
+    unitPrice: 0,
+    sellRate: 0,
+    costRate: 0
   };
 }
 
@@ -71,10 +73,34 @@ export function safeNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function deriveUnifiedRates(rawCharge, defaultFxRate) {
+  const chargeType = (String(rawCharge.chargeType || 'AR').toUpperCase() === 'AP') ? 'AP' : 'AR';
+  const unitPrice = safeNumber(rawCharge.unitPrice, 0);
+  let sellRate = safeNumber(rawCharge.sellRate, NaN);
+  let costRate = safeNumber(rawCharge.costRate, NaN);
+
+  if (!Number.isFinite(sellRate) && !Number.isFinite(costRate)) {
+    sellRate = chargeType === 'AR' ? unitPrice : 0;
+    costRate = chargeType === 'AP' ? unitPrice : 0;
+  } else {
+    if (!Number.isFinite(sellRate)) sellRate = 0;
+    if (!Number.isFinite(costRate)) costRate = 0;
+  }
+
+  return {
+    chargeType,
+    unitPrice,
+    sellRate,
+    costRate,
+    fxRate: safeNumber(rawCharge.fxRate, defaultFxRate) || 1
+  };
+}
+
 export function normaliseJob(job, index = 0) {
   const currency = (job.currency || 'USD').toUpperCase();
   const defaultFxRate = safeNumber(job.defaultFxRate, 1) || 1;
   const billToParty = job.billToParty || job.customer || '';
+
   return {
     ...defaultJob(index + 1),
     ...job,
@@ -95,15 +121,21 @@ export function normaliseJob(job, index = 0) {
     currency,
     defaultFxRate,
     charges: Array.isArray(job.charges) && job.charges.length
-      ? job.charges.map(c => ({
-          ...defaultCharge(currency, defaultFxRate),
-          ...c,
-          chargeType: (String(c.chargeType || 'AR').toUpperCase() === 'AP') ? 'AP' : 'AR',
-          currency: (c.currency || currency).toUpperCase(),
-          fxRate: safeNumber(c.fxRate, defaultFxRate) || 1,
-          qty: safeNumber(c.qty, 1),
-          unitPrice: safeNumber(c.unitPrice, 0)
-        }))
+      ? job.charges.map(c => {
+          const base = defaultCharge(currency, defaultFxRate);
+          const unified = deriveUnifiedRates(c, defaultFxRate);
+          return {
+            ...base,
+            ...c,
+            chargeType: unified.chargeType,
+            currency: (c.currency || currency).toUpperCase(),
+            fxRate: unified.fxRate,
+            qty: safeNumber(c.qty, 1),
+            unitPrice: Number.isFinite(safeNumber(c.unitPrice, NaN)) ? safeNumber(c.unitPrice, 0) : (unified.chargeType === 'AR' ? unified.sellRate : unified.costRate),
+            sellRate: unified.sellRate,
+            costRate: unified.costRate
+          };
+        })
       : [defaultCharge(currency, defaultFxRate)],
     invoices: Array.isArray(job.invoices)
       ? job.invoices.map(inv => ({
