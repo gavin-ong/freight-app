@@ -11,11 +11,10 @@
     <div class="topbar">
       <div class="brand">
         <h1>Freight App MVP</h1>
-        <div class="subtitle">Step 4Y · Unified Charge Model (foundation)</div>
+        <div class="subtitle">Step 4Y · Unified Charge Model</div>
       </div>
-
       <div class="toolbar">
-        <span class="build-pill">BUILD 5M-U1</span>
+        <span class="build-pill">BUILD 5M-U2</span>
         <button class="btn btn-secondary" id="btnCreateJob">Create Job</button>
         <select id="jobList" style="min-width:240px;"></select>
         <button class="btn btn-danger" id="btnLogout">Logout</button>
@@ -30,79 +29,31 @@
         </div>
         <div class="card-body">
           <div class="field-grid compact">
-            <label for="jobNo">Job No</label>
-            <input id="jobNo" readonly>
-
-            <label for="billToParty">Bill To Party</label>
-            <input id="billToParty" placeholder="e.g. SCASHA001">
-
-            <label for="payToParty">Pay To Party</label>
-            <input id="payToParty" placeholder="e.g. Vendor / Agent / Carrier">
-
-            <label for="shipper">Shipper</label>
-            <input id="shipper" placeholder="Shipper name">
-
-            <label for="consignee">Consignee</label>
-            <input id="consignee" placeholder="Consignee name">
-
-            <label for="notifyParty">Notify Party</label>
-            <input id="notifyParty" placeholder="Notify party">
-
-            <label for="mode">Mode</label>
-            <input id="mode" placeholder="SEA / AIR / TRUCK">
-
-            <label for="incoterm">Incoterm</label>
-            <input id="incoterm" placeholder="FOB / CIF">
-
-            <label for="pol">POL</label>
-            <input id="pol" placeholder="e.g. SGSIN">
-
-            <label for="pod">POD</label>
-            <input id="pod" placeholder="e.g. CNSHA">
-
-            <label for="originCountry">Origin</label>
-            <input id="originCountry" placeholder="e.g. SG">
-
-            <label for="destinationCountry">Destination</label>
-            <input id="destinationCountry" placeholder="e.g. CN">
-
-            <label for="currency">Invoice Currency</label>
-            <input id="currency" placeholder="USD / SGD">
-
-            <label for="defaultFxRate">Default FX Rate</label>
-            <input id="defaultFxRate" type="number" min="0" step="0.0001" placeholder="1.0000">
-
-            <label for="containerQty">Container Qty</label>
-            <input id="containerQty" type="number" min="0" step="1" placeholder="0">
-
-            <label for="containerType">Container Type</label>
-            <input id="containerType" placeholder="e.g. 20GP / 40HC">
-
-            <label for="hsCode">HS Code</label>
-            <input id="hsCode" placeholder="HS code">
-
-            <label for="netWeightKgs">Net Weight (KGS)</label>
-            <input id="netWeightKgs" type="number" min="0" step="0.01" placeholder="0.00">
-
-            <label for="grossWeightKgs">Gross Weight (KGS)</label>
-            <input id="grossWeightKgs" type="number" min="0" step="0.01" placeholder="0.00">
-
-            <label for="cbmM3">CBM (M3)</label>
-            <input id="cbmM3" type="number" min="0" step="0.001" placeholder="0.000">
-
-            <label for="eta">ETA</label>
-            <input id="eta" type="date">
-
-            <label for="etd">ETD</label>
-            <input id="etd" type="date">
-
-            <label for="goodsDescription">Goods Description</label>
-            <textarea id="goodsDescription" class="span-field" placeholder="Description of goods"></textarea>
-
-            <label for="marksNumbers">Marks &amp; Numbers</label>
-            <textarea id="marksNumbers" class="span-field" placeholder="Shipping marks / numbers"></textarea>
+            <label for="jobNo">Job No</label><input id="jobNo" readonly>
+            <label for="billToParty">Bill To Party</label><input id="billToParty" placeholder="e.g. SCASHA001">
+            <label for="payToParty">Pay To Party</label><input id="payToParty" placeholder="e.g. Vendor / Agent / Carrier">
+            <label for="shipper">Shipper</label><input id="shipper" placeholder="Shipper name">
+            <label for="consignee">Consignee</label><input id="consignee" placeholder="Consignee name">
+            <label for="notifyParty">Notify Party</label><input id="notifyParty" placeholder="Notify party">
+            <label for="mode">Mode</label><input id="mode" placeholder="SEA / AIR / TRUCK">
+            <label for="incoterm">Incoterm</label><input id="incoterm" placeholder="FOB / CIF">
+            <label for="pol">POL</label><input id="pol" placeholder="e.g. SGSIN">
+            <label for="pod">POD</label><input id="pod" placeholder="e.g. CNSHA">
+            <label for="originCountry">Origin</label><input id="originCountry" placeholder="e.g. SG">
+            <label for="destinationCountry">Destination</label><input id="destinationCountry" placeholder="e.g. CN">
+            <label for="currency">Invoice Currency</label><input id="currency" placeholder="USD / SGD">
+            <label for="defaultFxRate">Default FX Rate</label><input id="defaultFxRate" type="number" min="0" step="0.0001" placeholder="1.0000">
+            <label for="containerQty">Container Qty</label><input id="containerQty" type="number" min="0" step="1" placeholder="0">
+            <label for="containerType">Container Type</label><input id="containerType" placeholder="e.g. 20GP / 40HC">
+            <label for="hsCode">HS Code</label><input id="hsCode" placeholder="HS code">
+            <label for="netWeightKgs">Net Weight (KGS)</label><input id="netWeightKgs" type="number" min="0" step="0.01" placeholder="0.00">
+            <label for="grossWeightKgs">Gross Weight (KGS)</label><input id="grossWeightKgs" type="number" min="0" step="0.01" placeholder="0.00">
+            <label for="cbmM3">CBM (M3)</label><input id="cbmM3" type="number" min="0" step="0.001" placeholder="0.000">
+            <label for="eta">ETA</label><input id="eta" type="date">
+            <label for="etd">ETD</label><input id="etd" type="date">
+            <label for="goodsDescription">Goods Description</label><textarea id="goodsDescription" class="span-field" placeholder="Description of goods"></textarea>
+            <label for="marksNumbers">Marks & Numbers</label><textarea id="marksNumbers" class="span-field" placeholder="Shipping marks / numbers"></textarea>
           </div>
-
           <div class="job-actions">
             <button class="btn btn-primary" id="btnSaveJob">Save Job</button>
             <button class="btn btn-ghost" id="btnResetJob">Reset Form</button>
@@ -123,36 +74,17 @@
               <div class="muted" id="companyHeaderPreview">Company address line 1 · Singapore · UEN / GST Reg No: TBD</div>
             </div>
           </div>
-
           <div class="field-grid">
-            <label for="companyName">Company Name</label>
-            <input id="companyName" placeholder="YOUR COMPANY NAME PTE LTD">
-
-            <label for="companyAddress1">Address Line 1</label>
-            <input id="companyAddress1" placeholder="Company address line 1">
-
-            <label for="companyAddress2">Address Line 2</label>
-            <input id="companyAddress2" placeholder="Optional address line 2">
-
-            <label for="companyCountry">Country</label>
-            <input id="companyCountry" placeholder="Singapore">
-
-            <label for="companyRegNo">UEN / GST Reg No</label>
-            <input id="companyRegNo" placeholder="e.g. 202600000X / M9-0000000-X">
-
-            <label for="logoUrl">Logo URL</label>
-            <input id="logoUrl" placeholder="Paste image URL if available">
-
-            <label for="paymentTerms">Payment Terms</label>
-            <input id="paymentTerms" placeholder="e.g. Strictly Due Upon Receipt">
-
-            <label for="bankDetails">Bank Details</label>
-            <textarea id="bankDetails" placeholder="Bank name / account no / swift / other remittance info"></textarea>
-
-            <label for="footerNote">Invoice Footer Note</label>
-            <textarea id="footerNote" placeholder="This is a system-generated invoice preview from Freight App MVP."></textarea>
+            <label for="companyName">Company Name</label><input id="companyName" placeholder="YOUR COMPANY NAME PTE LTD">
+            <label for="companyAddress1">Address Line 1</label><input id="companyAddress1" placeholder="Company address line 1">
+            <label for="companyAddress2">Address Line 2</label><input id="companyAddress2" placeholder="Optional address line 2">
+            <label for="companyCountry">Country</label><input id="companyCountry" placeholder="Singapore">
+            <label for="companyRegNo">UEN / GST Reg No</label><input id="companyRegNo" placeholder="e.g. 202600000X / M9-0000000-X">
+            <label for="logoUrl">Logo URL</label><input id="logoUrl" placeholder="Paste image URL if available">
+            <label for="paymentTerms">Payment Terms</label><input id="paymentTerms" placeholder="e.g. Strictly Due Upon Receipt">
+            <label for="bankDetails">Bank Details</label><textarea id="bankDetails" placeholder="Bank name / account no / swift / other remittance info"></textarea>
+            <label for="footerNote">Invoice Footer Note</label><textarea id="footerNote" placeholder="This is a system-generated invoice preview from Freight App MVP."></textarea>
           </div>
-
           <div class="company-actions">
             <button class="btn btn-primary" id="btnSaveCompany">Save Company Profile</button>
             <button class="btn btn-ghost" id="btnResetCompany">Reset Company Form</button>
@@ -172,41 +104,28 @@
           <table class="charges-table">
             <thead>
               <tr>
-                <th style="width:52px;">#</th>
-                <th style="width:95px;">Code</th>
+                <th style="width:42px;">#</th>
+                <th style="width:90px;">Code</th>
                 <th>Description</th>
-                <th style="width:96px;">Cur</th>
-                <th style="width:80px;">Qty</th>
-                <th style="width:86px;">UOM</th>
-                <th style="width:110px;">Sell Rate</th>
-                <th style="width:110px;">Cost Rate</th>
-                <th style="width:120px;">Sell Amt</th>
-                <th style="width:120px;">Cost Amt</th>
-                <th style="width:110px;">Profit</th>
-                <th style="width:82px;">Action</th>
+                <th style="width:72px;">Cur</th>
+                <th style="width:62px;">Qty</th>
+                <th style="width:72px;">UOM</th>
+                <th style="width:92px;">Sell Rate</th>
+                <th style="width:92px;">Cost Rate</th>
+                <th style="width:96px;">Sell Amt</th>
+                <th style="width:96px;">Cost Amt</th>
+                <th style="width:90px;">Profit</th>
+                <th style="width:74px;">Action</th>
               </tr>
             </thead>
             <tbody id="chargesBody"></tbody>
           </table>
         </div>
-
         <div class="summary-bar summary-bar-wide">
-          <div class="summary-box">
-            <div class="label">AR Revenue</div>
-            <div class="value" id="sumRevenue">0.00</div>
-          </div>
-          <div class="summary-box">
-            <div class="label">AP Cost</div>
-            <div class="value" id="sumCost">0.00</div>
-          </div>
-          <div class="summary-box">
-            <div class="label">Profit</div>
-            <div class="value" id="sumProfit">0.00</div>
-          </div>
-          <div class="summary-box">
-            <div class="label">Margin %</div>
-            <div class="value" id="sumMargin">0.00%</div>
-          </div>
+          <div class="summary-box"><div class="label">AR Revenue</div><div class="value" id="sumRevenue">0.00</div></div>
+          <div class="summary-box"><div class="label">AP Cost</div><div class="value" id="sumCost">0.00</div></div>
+          <div class="summary-box"><div class="label">Profit</div><div class="value" id="sumProfit">0.00</div></div>
+          <div class="summary-box"><div class="label">Margin %</div><div class="value" id="sumMargin">0.00%</div></div>
         </div>
       </div>
     </div>
@@ -223,7 +142,6 @@
           <button class="btn btn-warning" id="btnVoidInvoice">Void Invoice</button>
           <button class="btn btn-secondary" id="btnPrintInvoice">Print Invoice</button>
         </div>
-
         <div class="table-wrap">
           <table>
             <thead>
