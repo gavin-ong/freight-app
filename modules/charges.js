@@ -10,8 +10,8 @@ export function renderCharges(job, updateCharge, removeCharge) {
       <td class="description-cell"><input value="${escapeHtml(c.description)}" data-index="${idx}" data-field="description"></td>
       <td class="compact-cell">
         <select data-index="${idx}" data-field="chargeType">
-          <option value="revenue" ${c.chargeType === 'revenue' ? 'selected' : ''}>Revenue</option>
-          <option value="cost" ${c.chargeType === 'cost' ? 'selected' : ''}>Cost</option>
+          <option value="AR" ${c.chargeType === 'AR' ? 'selected' : ''}>AR</option>
+          <option value="AP" ${c.chargeType === 'AP' ? 'selected' : ''}>AP</option>
         </select>
       </td>
       <td class="compact-cell"><input value="${escapeHtml(c.currency)}" data-index="${idx}" data-field="currency"></td>
@@ -43,6 +43,7 @@ export function updateJobCharge(job, index, field, value) {
   if (!charge) return;
   if (['qty', 'unitPrice', 'fxRate'].includes(field)) charge[field] = Number(value || 0);
   else if (field === 'currency') charge[field] = String(value || '').toUpperCase();
+  else if (field === 'chargeType') charge[field] = (String(value || 'AR').toUpperCase() === 'AP') ? 'AP' : 'AR';
   else charge[field] = value;
 }
 
