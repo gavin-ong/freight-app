@@ -1,12 +1,13 @@
-import { byId, escapeHtml, fmtMoney, nowForInvoice, invoiceNo, calcSummary } from './utils.js';
+import { byId, escapeHtml, fmtMoney, nowForInvoice, invoiceNo, getInvoiceCharges, calculatedChargeAmount } from './utils.js';
 
 export function generateInvoiceForJob(job) {
-  const s = calcSummary(job);
+  const invoiceCharges = getInvoiceCharges(job);
+  const total = invoiceCharges.reduce((sum, c) => sum + calculatedChargeAmount(c), 0);
   job.invoices = [{
     id: `inv-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
     invoiceNo: invoiceNo(),
     status: 'DRAFT',
-    total: s.revenue,
+    total,
     currency: job.currency,
     date: nowForInvoice()
   }];
