@@ -1,18 +1,13 @@
 let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
 let currentIndex = null;
 
-function saveToStorage() {
+function save() {
   localStorage.setItem("jobs", JSON.stringify(jobs));
 }
 
+// JOB
 function generateJobNo() {
-  let num = String(jobs.length + 1).padStart(6, '0');
-  return "SGSIN-" + num;
-}
-
-function generateInvoiceNo() {
-  let num = String(Date.now()).slice(-6);
-  return "INV-SGSIN-" + num;
+  return "SGSIN-" + String(jobs.length + 1).padStart(6, '0');
 }
 
 function createJob() {
@@ -30,55 +25,50 @@ function createJob() {
 
   jobs.push(job);
   currentIndex = jobs.length - 1;
-
-  saveToStorage();
+  save();
   refreshJobList();
   loadJob();
 }
 
 function refreshJobList() {
-  let select = document.getElementById("jobList");
-  select.innerHTML = "";
+  let list = document.getElementById("jobList");
+  list.innerHTML = "";
 
   jobs.forEach((j, i) => {
     let opt = document.createElement("option");
     opt.value = i;
     opt.textContent = j.jobNo;
-    select.appendChild(opt);
+    list.appendChild(opt);
   });
 
-  if (currentIndex !== null) {
-    select.value = currentIndex;
-  }
+  list.value = currentIndex;
 }
 
 function loadJob() {
   currentIndex = document.getElementById("jobList").value;
-  let job = jobs[currentIndex];
+  let j = jobs[currentIndex];
 
-  document.getElementById("customer").value = job.customer;
-  document.getElementById("shipper").value = job.shipper;
-  document.getElementById("consignee").value = job.consignee;
-  document.getElementById("mode").value = job.mode;
-  document.getElementById("eta").value = job.eta;
-  document.getElementById("etd").value = job.etd;
+  document.getElementById("customer").value = j.customer;
+  document.getElementById("shipper").value = j.shipper;
+  document.getElementById("consignee").value = j.consignee;
+  document.getElementById("mode").value = j.mode;
+  document.getElementById("eta").value = j.eta;
+  document.getElementById("etd").value = j.etd;
 
   renderCharges();
-  renderInvoices();
+  renderInvoice();
 }
 
 function saveJob() {
-  let job = jobs[currentIndex];
+  let j = jobs[currentIndex];
+  j.customer = customer.value;
+  j.shipper = shipper.value;
+  j.consignee = consignee.value;
+  j.mode = mode.value;
+  j.eta = eta.value;
+  j.etd = etd.value;
 
-  job.customer = document.getElementById("customer").value;
-  job.shipper = document.getElementById("shipper").value;
-  job.consignee = document.getElementById("consignee").value;
-  job.mode = document.getElementById("mode").value;
-  job.eta = document.getElementById("eta").value;
-  job.etd = document.getElementById("etd").value;
-
-  saveToStorage();
-  alert("Saved");
+  save();
 }
 
 // CHARGES
@@ -88,84 +78,99 @@ function addCharge() {
     qty: 1,
     unitPrice: 0
   });
-
   renderCharges();
 }
 
 function renderCharges() {
-  let tbody = document.querySelector("#chargesTable tbody");
-  tbody.innerHTML = "";
+  let html = "";
 
   jobs[currentIndex].charges.forEach((c, i) => {
-    let row = `
-      <tr>
-        <td><input value="${c.description}" onchange="updateCharge(${i}, 'description', this.value)"></td>
-        <td><input type="number" value="${c.qty}" onchange="updateCharge(${i}, 'qty', this.value)"></td>
-        <td><input type="number" value="${c.unitPrice}" onchange="updateCharge(${i}, 'unitPrice', this.value)"></td>
-      </tr>
-    `;
-    tbody.innerHTML += row;
+    html += `
+    <tr>
+      <td><input value="${c.description}" onchange="updateCharge(${i},'description',this.value)"></td>
+      <td><input type="number" value="${c.qty}" onchange="updateCharge(${i},'qty',this.value)"></td>
+      <td><input type="number" value="${c.unitPrice}" onchange="updateCharge(${i},'unitPrice',this.value)"></td>
+    </tr>`;
   });
+
+  document.getElementById("chargesTable").innerHTML = html;
 }
 
-function updateCharge(i, field, value) {
-  jobs[currentIndex].charges[i][field] = Number(value) || value;
-  saveToStorage();
+function updateCharge(i, field, val) {
+  jobs[currentIndex].charges[i][field] = Number(val) || val;
+  save();
 }
 
-// INVOICE ENGINE
+// INVOICE
 function generateInvoice() {
   let job = jobs[currentIndex];
+  let total = job.charges.reduce((s,c)=>s+c.qty*c.unitPrice,0);
 
-  let total = job.charges.reduce((sum, c) => {
-    return sum + (c.qty * c.unitPrice);
-  }, 0);
-
-  let invoice = {
-    invoiceNo: generateInvoiceNo(),
+  job.invoices = [{
+    invoiceNo: "INV-SGSIN-" + Date.now().toString().slice(-6),
     status: "DRAFT",
     total: total
-  };
+  }];
 
-  job.invoices = [invoice];
-
-  saveToStorage();
-  renderInvoices();
+  save();
+  renderInvoice();
 }
 
 function postInvoice() {
   let inv = jobs[currentIndex].invoices[0];
   if (!inv) return;
   inv.status = "POSTED";
-  saveToStorage();
-  renderInvoices();
+  save();
+  renderInvoice();
 }
 
 function voidInvoice() {
   let inv = jobs[currentIndex].invoices[0];
   if (!inv) return;
   inv.status = "VOID";
-  saveToStorage();
-  renderInvoices();
+  save();
+  renderInvoice();
 }
 
-function renderInvoices() {
-  let tbody = document.querySelector("#invoiceTable tbody");
-  tbody.innerHTML = "";
-
+function renderInvoice() {
   let inv = jobs[currentIndex].invoices[0];
+  if (!inv) return document.getElementById("invoiceTable").innerHTML = "";
 
-  if (!inv) return;
-
-  let row = `
+  document.getElementById("invoiceTable").innerHTML = `
     <tr>
       <td>${inv.invoiceNo}</td>
       <td>${inv.status}</td>
       <td>${inv.total.toFixed(2)}</td>
-    </tr>
-  `;
+    </tr>`;
+}
 
-  tbody.innerHTML = row;
+// PRINT
+function printInvoice() {
+  let job = jobs[currentIndex];
+  let inv = job.invoices[0];
+  if (!inv) return alert("No invoice");
+
+  document.getElementById("pInvNo").innerText = inv.invoiceNo;
+  document.getElementById("pCust").innerText = job.customer;
+
+  let rows = "";
+  job.charges.forEach(c=>{
+    rows += `
+    <tr>
+      <td>${c.description}</td>
+      <td>${c.qty}</td>
+      <td>${c.unitPrice}</td>
+      <td>${(c.qty*c.unitPrice).toFixed(2)}</td>
+    </tr>`;
+  });
+
+  document.getElementById("pCharges").innerHTML = rows;
+  document.getElementById("pTotal").innerText = inv.total.toFixed(2);
+
+  let printContents = document.getElementById("printArea").innerHTML;
+  let win = window.open("", "", "width=800,height=600");
+  win.document.write(printContents);
+  win.print();
 }
 
 // INIT
