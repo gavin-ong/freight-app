@@ -1,11 +1,10 @@
-import { escapeHtml, fmtMoney, calculatedChargeAmount, getInvoiceCharges } from './utils.js';
+import { escapeHtml, fmtMoney, calculatedChargeAmount } from './utils.js';
 
 export function buildPrintHtml(job, companyProfile) {
   const inv = job.invoices[0];
   if (!inv) return '';
-  const invoiceCharges = getInvoiceCharges(job);
   const addressLines = [companyProfile.address1, companyProfile.address2, companyProfile.country, `UEN / GST Reg No: ${companyProfile.regNo}`].filter(Boolean).join('<br>');
-  const lineRows = invoiceCharges.map((c, idx) => `
+  const lineRows = job.charges.map((c, idx) => `
     <tr>
       <td class="center">${idx + 1}</td>
       <td>${escapeHtml(c.code || '')}</td>
@@ -21,16 +20,6 @@ export function buildPrintHtml(job, companyProfile) {
     companyProfile.paymentTerms ? `<strong>Payment Terms:</strong> ${escapeHtml(companyProfile.paymentTerms)}` : '',
     companyProfile.bankDetails ? `<strong>Bank Details:</strong><br>${escapeHtml(companyProfile.bankDetails).replace(/\n/g, '<br>')}` : ''
   ].filter(Boolean).join('<br><br>');
-  const goodsBlock = [
-    job.goodsDescription ? `Goods Description: ${escapeHtml(job.goodsDescription)}` : '',
-    job.marksNumbers ? `Marks & Numbers: ${escapeHtml(job.marksNumbers)}` : '',
-    job.hsCode ? `HS Code: ${escapeHtml(job.hsCode)}` : '',
-    job.containerQty ? `Container Qty: ${escapeHtml(job.containerQty)}` : '',
-    job.containerType ? `Container Type: ${escapeHtml(job.containerType)}` : '',
-    job.netWeightKgs ? `Net Weight (KGS): ${escapeHtml(job.netWeightKgs)}` : '',
-    job.grossWeightKgs ? `Gross Weight (KGS): ${escapeHtml(job.grossWeightKgs)}` : '',
-    job.cbmM3 ? `CBM (M3): ${escapeHtml(job.cbmM3)}` : ''
-  ].filter(Boolean).join('\n');
 
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${escapeHtml(inv.invoiceNo)}</title><style>
     @page { size: A4 portrait; margin: 16mm; }
@@ -62,12 +51,11 @@ export function buildPrintHtml(job, companyProfile) {
   </style></head><body><div class="page">
     <div class="header"><div class="company-wrap">${logoHtml}<div class="company"><h1>${escapeHtml(companyProfile.companyName)}</h1><div class="meta">${addressLines}</div></div></div>
     <div class="invoice-head"><div class="title">TAX INVOICE</div><div class="meta-line"><strong>Invoice No:</strong> ${escapeHtml(inv.invoiceNo)}</div><div class="meta-line"><strong>Status:</strong> ${escapeHtml(inv.status)}</div><div class="meta-line"><strong>Date:</strong> ${escapeHtml(inv.date)}</div></div></div>
-    <div class="panels"><div class="panel"><div class="panel-title">Bill To</div><div class="panel-body">${escapeHtml(job.billToParty || job.customer || '')}</div></div>
+    <div class="panels"><div class="panel"><div class="panel-title">Bill To</div><div class="panel-body">${escapeHtml(job.customer || '')}</div></div>
     <div class="panel"><div class="panel-title">Job Details</div><div class="panel-body">Job No: ${escapeHtml(job.jobNo || '')}
 POL / POD: ${escapeHtml(job.pol || '')} → ${escapeHtml(job.pod || '')}
 Incoterm: ${escapeHtml(job.incoterm || '')}
-Origin / Destination: ${escapeHtml(job.originCountry || '')} → ${escapeHtml(job.destinationCountry || '')}
-${goodsBlock}</div></div></div>
+Origin / Destination: ${escapeHtml(job.originCountry || '')} → ${escapeHtml(job.destinationCountry || '')}</div></div></div>
     <table><thead><tr><th style="width:44px;">#</th><th style="width:88px;">Code</th><th>Description</th><th style="width:64px;">Qty</th><th style="width:66px;">UOM</th><th style="width:92px;">Rate</th><th style="width:96px;">Amount</th><th style="width:88px;">Currency</th></tr></thead><tbody>${lineRows}</tbody></table>
     <div class="totals"><div class="total-box"><div class="total-label">Total Payable:</div><div class="total-value">${escapeHtml(inv.currency)} ${fmtMoney(inv.total)}</div></div></div>
     <div class="footer-note">${companyProfile.footerNote ? escapeHtml(companyProfile.footerNote).replace(/\n/g, '<br>') : ''}${footerExtra ? `<br><br>${footerExtra}` : ''}</div>
